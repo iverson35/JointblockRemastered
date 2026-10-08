@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "jointblock:block/bpbuilder_front",
+        "down": "jointblock:block/bpbuilder",
+        "up": "jointblock:block/bpbuilder",
+        "north": "jointblock:block/bpbuilder",
+        "east": "jointblock:block/bpbuilder",
+        "south": "jointblock:block/bpbuilder_front",
+        "west": "jointblock:block/bpbuilder"
+    }
+}

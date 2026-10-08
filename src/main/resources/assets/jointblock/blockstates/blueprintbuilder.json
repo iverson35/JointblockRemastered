@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "jointblock:blueprintbuilder" },
+        "facing=west":  { "model": "jointblock:blueprintbuilder", "y": 90 },
+        "facing=north": { "model": "jointblock:blueprintbuilder", "y": 180 },
+        "facing=east":  { "model": "jointblock:blueprintbuilder", "y": 270 }
+    }
+}

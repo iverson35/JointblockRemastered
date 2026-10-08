@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "jointblock:item/unitparts"
+       ,"layer1": "jointblock:item/mctrl_overlay"
+    }
+}

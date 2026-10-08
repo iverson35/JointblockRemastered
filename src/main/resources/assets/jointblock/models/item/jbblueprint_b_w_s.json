@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "jointblock:item/jbblueprint_b_w"
+       ,"layer1": "jointblock:item/overlay_sealed"
+    }
+}
