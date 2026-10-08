@@ -20,10 +20,22 @@ build
 # other
 eclipse
 run
+logs
+
+# 1.12.2 reference material: the decompiled mod, its assets and the MCP/source extracts used while
+# porting. Kept on disk, never committed.
+/referance/
+.refsrc/
+
+# local throwaway compile/test scaffolding (not part of the build)
+.jbargs
+.jbcp
+.jblibs/
+.jbout/
+.jbcheck.sh
+.cp_jars.txt
+.cp_win.txt
+c*.log
 
 # Files from Forge MDK
 forge*changelog.txt
-/referance/
-/gradlew.bat
-/gradlew
-/gradle/
