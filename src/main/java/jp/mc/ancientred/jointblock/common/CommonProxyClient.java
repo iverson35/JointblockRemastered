@@ -219,12 +219,7 @@ public class CommonProxyClient extends CommonProxy {
 
    @Override
    public CompoundTag getNBTImportDataAsSingle(Player player) {
-      try {
-         return JBImportExportDataUtil.getBase64edNBTFromClientClipboard(player);
-      } catch (IOException var3) {
-         var3.printStackTrace();
-         return null;
-      }
+      return JBImportExportDataUtil.takeImportedAssembleDataForSingle();
    }
 
    @Override

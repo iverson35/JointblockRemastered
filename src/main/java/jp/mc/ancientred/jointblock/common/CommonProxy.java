@@ -84,6 +84,11 @@ public class CommonProxy {
       return false;
    }
 
+   /**
+    * Single-player blueprint import: returns the tag the client already parsed from its clipboard
+    * ({@code JBImportExportDataUtil#importAssembleData}). 1.12.2 read the clipboard here instead,
+    * which the 1.20.1 GLFW clipboard does not allow from the integrated server thread.
+    */
    public CompoundTag getNBTImportDataAsSingle(Player player) {
       return null;
    }

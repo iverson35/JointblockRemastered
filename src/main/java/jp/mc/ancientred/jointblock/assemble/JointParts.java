@@ -488,7 +488,7 @@ public class JointParts implements IJBJointParameterHolder.IJBJoint, IJBJointPar
             float extendRateY = 1.0F;
             float extendRateZ = 1.0F;
             int extendAxis = JBRotationUtil.getExtenderAxis(target.connectSide);
-            float extendRateCommon = Mth.sqrt((float)target.extendRate / 100.0F);
+            float extendRateCommon = Mth.abs((float)target.extendRate / 100.0F);
             if (extendAxis == 0) {
                extendRateX = extendRateCommon;
             }
@@ -555,7 +555,7 @@ public class JointParts implements IJBJointParameterHolder.IJBJoint, IJBJointPar
             float extendRateY = 1.0F;
             float extendRateZ = 1.0F;
             int extendAxis = target.getInitValue(1);
-            extendRateY = Mth.sqrt((float)target.extendRate / 100.0F);
+            extendRateY = Mth.abs((float)target.extendRate / 100.0F);
             if (extendRateY < 0.001F) {
                extendRateY = 0.001F;
             }

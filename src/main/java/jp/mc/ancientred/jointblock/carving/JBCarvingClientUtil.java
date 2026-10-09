@@ -34,6 +34,10 @@ public class JBCarvingClientUtil {
    private static final int DATA_BITLEN = 4;
    private static long lastSentTimeMillis;
    private static final long EDIT_SEND_INTERVAL = 100L;
+   /** Visible-face mask of {@link #renderBoxesCarvedModelGreedy}: grown on demand, reused per call. */
+   private static boolean[] greedyMask = new boolean[0];
+   /** Palette slot per {@link #greedyMask} cell, so only equal-slot faces merge. */
+   private static byte[] greedySlot = new byte[0];
 
    public static void editCarveDataOnClient(Player player, TileEntityJoint te, boolean leftClick) {
       long now = System.currentTimeMillis();
@@ -641,6 +645,126 @@ public class JBCarvingClientUtil {
             }
          }
 
+      }
+   }
+
+   /**
+    * Greedy-meshed form of {@link #renderBoxesCarvedModel}, reproducing the same 1.12.2
+    * {@code GL_QUADS} geometry ({@code POSITION_COLOR_NORMAL}) with merged rectangles: coplanar
+    * visible unit faces that share a direction and a palette slot are merged into maximal
+    * axis-aligned rectangles, so a flat {@code divide}x{@code divide} face becomes a single quad
+    * instead of {@code divide*divide} of them. The emitted surface, per-face colour, normal and
+    * vertex winding are identical to {@link #renderBoxesCarvedModel}.
+    *
+    * <p>The six directions are meshed independently. For a direction the visible mask is a 2D plane
+    * of unit faces (one layer per coordinate along the face axis); the layer is deleted greedily
+    * into equal-slot rectangles. Only the lazily grown static scratch arrays are reused, so a call
+    * allocates nothing.
+    */
+   public static final void renderBoxesCarvedModelGreedy(VertexConsumer bb, Matrix4f matrix, int[] carvingData, int[] palletData) {
+      int divideCount = JBCarvingDataUtil.getCarvingDivide(carvingData);
+      if (divideCount < 1) {
+         return;
+      }
+
+      int plane = divideCount * divideCount;
+      double unitd = 1.0 / (double)divideCount;
+      int maskSize = divideCount * divideCount;
+      if (greedyMask.length < maskSize) {
+         greedyMask = new boolean[maskSize];
+         greedySlot = new byte[maskSize];
+      }
+
+      int[][] shaded = shadedPalette(palletData);
+
+      for(int d = 0; d < 6; ++d) {
+         // Face axis (0=x, 1=y, 2=z), its sign, and the two mask axes as increasing axes.
+         int ax = d < 2 ? 1 : (d < 4 ? 2 : 0);
+         int s = (d & 1) == 0 ? -1 : 1;
+         int u = ax == 0 ? 1 : 0;
+         int v = ax == 2 ? 1 : 2;
+         // Index weights for cellIndex = (y * divide + z) * divide + x.
+         int coefAx = ax == 0 ? 1 : (ax == 1 ? plane : divideCount);
+         int coefU = u == 0 ? 1 : (u == 1 ? plane : divideCount);
+         int coefV = v == 0 ? 1 : (v == 1 ? plane : divideCount);
+
+         for(int p = 0; p < divideCount; ++p) {
+            boolean border = s < 0 ? p == 0 : p == divideCount - 1;
+            int pBase = p * coefAx;
+
+            // Visible-face mask: carved cell whose neighbour behind the face is not carved.
+            for(int a = 0; a < divideCount; ++a) {
+               int rowBase = a * divideCount;
+               int aBase = pBase + a * coefU;
+               for(int b = 0; b < divideCount; ++b) {
+                  int mi = rowBase + b;
+                  greedyMask[mi] = false;
+                  int cellIndex = aBase + b * coefV;
+                  int dat = carvingData[cellIndex >> 3] >>> ((cellIndex & 7) << 2) & 15;
+                  if (dat != 0 && (dat & 8) == 0 && (border || !isCarvedCell(carvingData, cellIndex + s * coefAx))) {
+                     greedyMask[mi] = true;
+                     greedySlot[mi] = (byte)(dat & 15);
+                  }
+               }
+            }
+
+            // Merge equal-slot set cells into maximal rectangles: widen along v, then along u.
+            for(int a = 0; a < divideCount; ++a) {
+               int rowBase = a * divideCount;
+               for(int b = 0; b < divideCount; ++b) {
+                  int mi = rowBase + b;
+                  if (!greedyMask[mi]) {
+                     continue;
+                  }
+
+                  int slot = greedySlot[mi];
+                  int b1 = b;
+                  while(b1 + 1 < divideCount && greedyMask[rowBase + b1 + 1] && greedySlot[rowBase + b1 + 1] == slot) {
+                     ++b1;
+                  }
+
+                  int a1 = a;
+                  grow:
+                  while(a1 + 1 < divideCount) {
+                     int nextBase = (a1 + 1) * divideCount;
+                     for(int bx = b; bx <= b1; ++bx) {
+                        if (!greedyMask[nextBase + bx] || greedySlot[nextBase + bx] != slot) {
+                           break grow;
+                        }
+                     }
+                     ++a1;
+                  }
+
+                  double minU = (double)a * unitd;
+                  double maxU = (double)(a1 + 1) * unitd;
+                  double minV = (double)b * unitd;
+                  double maxV = (double)(b1 + 1) * unitd;
+                  double planeC = (s < 0 ? (double)p : (double)(p + 1)) * unitd;
+                  int color = shaded[slot][d];
+
+                  if (d == 0) {
+                     quad(bb, matrix, color, 0.0F, -1.0F, 0.0F, minU, planeC, maxV, minU, planeC, minV, maxU, planeC, minV, maxU, planeC, maxV);
+                  } else if (d == 1) {
+                     quad(bb, matrix, color, 0.0F, 1.0F, 0.0F, maxU, planeC, maxV, maxU, planeC, minV, minU, planeC, minV, minU, planeC, maxV);
+                  } else if (d == 2) {
+                     quad(bb, matrix, color, 0.0F, 0.0F, -1.0F, minU, maxV, planeC, maxU, maxV, planeC, maxU, minV, planeC, minU, minV, planeC);
+                  } else if (d == 3) {
+                     quad(bb, matrix, color, 0.0F, 0.0F, 1.0F, minU, maxV, planeC, minU, minV, planeC, maxU, minV, planeC, maxU, maxV, planeC);
+                  } else if (d == 4) {
+                     quad(bb, matrix, color, -1.0F, 0.0F, 0.0F, planeC, maxU, maxV, planeC, maxU, minV, planeC, minU, minV, planeC, minU, maxV);
+                  } else {
+                     quad(bb, matrix, color, 1.0F, 0.0F, 0.0F, planeC, minU, maxV, planeC, minU, minV, planeC, maxU, minV, planeC, maxU, maxV);
+                  }
+
+                  for(int aa = a; aa <= a1; ++aa) {
+                     int clearBase = aa * divideCount;
+                     for(int by = b; by <= b1; ++by) {
+                        greedyMask[clearBase + by] = false;
+                     }
+                  }
+               }
+            }
+         }
       }
    }
 

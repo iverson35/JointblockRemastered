@@ -32,7 +32,9 @@ public class ItemKeyBindedMotion extends AbstractMotionItem implements IJBMotion
 
    @Override
    public Component getName(ItemStack stack) {
-      return Component.translatable(this.getDescriptionId() + ".name").append(Component.translatable(KeyMotionBinder.seatNames[getSubtype(stack)]));
+      // 1.12.2 appended ".name" to the unlocalized name ("item.keyresmotionitem" + ".name");
+      // in 1.20.1 the description id already is the lang key (item.jointblock.keyresmotionitem).
+      return Component.translatable(this.getDescriptionId()).append(Component.translatable(KeyMotionBinder.seatNames[getSubtype(stack)]));
    }
 
    @Override

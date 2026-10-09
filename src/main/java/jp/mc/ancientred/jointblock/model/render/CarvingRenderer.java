@@ -13,6 +13,9 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 /**
  * Draws the carved (palette-coloured) shape of a joint block or joint part.
  *
@@ -74,6 +77,77 @@ public class CarvingRenderer {
          default:
             renderBoxCarvedModel(joint.carvingData, paletteData, pose, bufferSource, packedLight);
       }
+   }
+
+   /**
+    * 1.12.2 {@code renderTeCarvedModelByType} on the compiled path: the carved mesh of the TE is
+    * built once and replayed until {@code TileEntityJoint#isCarvingCompiled} is cleared (which every
+    * carve-data write already does, as in 1.12.2) or the palette contents change.
+    */
+   public static void renderTeCarvedModelCached(TileEntityJoint te, int[] paletteData, PoseStack pose,
+                                                MultiBufferSource bufferSource, int packedLight) {
+      int type = JBCarvingDataUtil.getCarvingType(te.carvingData);
+      MCubeGathered gathered = null;
+
+      if (type == 4) {
+         if (te.mCubeGatheredData == null || te.mCubeGatheredData.dim != JBCarvingDataUtil.getCarvingDivide(te.carvingData)) {
+            te.mCubeGatheredData = MCubeMeshBuilder.gatherMCCarvingDataTileEntity(te.mCubeGatheredData, te);
+            if (te.mCubeGatheredData == null) {
+               return;
+            }
+         }
+
+         gathered = te.mCubeGatheredData;
+      }
+
+      CarvedMeshCache cache = cacheFor(te);
+
+      if (!te.isCarvingCompiled) {
+         cache.invalidate();
+      }
+
+      VertexConsumer bb = bufferSource.getBuffer(JBRenderTypes.solidColorTriangles());
+      cache.render(bb, pose.last().pose(), te.carvingData, type, paletteData, gathered);
+      te.isCarvingCompiled = true;
+   }
+
+   /**
+    * 1.12.2 {@code renderJointCarvedModelByType} on the compiled path: the carved mesh of the part
+    * is built once and replayed while the part keeps the same carving data (assembly data updates
+    * always replace the part's {@code carvingData} array) and the same palette contents.
+    */
+   public static void renderJointCarvedModelCached(JointPartsRenderable joint, int[] paletteData, PoseStack pose,
+                                                   MultiBufferSource bufferSource, int packedLight) {
+      int type = joint.carvingType;
+      MCubeGathered gathered = null;
+
+      if (type == 4) {
+         if (joint.mCubeGatheredData == null || joint.mCubeGatheredData.dim != JBCarvingDataUtil.getCarvingDivide(joint.carvingData)) {
+            joint.mCubeGatheredData = MCubeMeshBuilder.gatherMCCarvingDataJointParts(joint.mCubeGatheredData, joint);
+            if (joint.mCubeGatheredData == null) {
+               return;
+            }
+         }
+
+         gathered = joint.mCubeGatheredData;
+      }
+
+      VertexConsumer bb = bufferSource.getBuffer(JBRenderTypes.solidColorTriangles());
+      joint.carvedMeshCache.render(bb, pose.last().pose(), joint.carvingData, type, paletteData, gathered);
+   }
+
+   /** Per-TE caches; weak keys so an unloaded joint core does not keep its mesh alive. */
+   private static final Map<TileEntityJoint, CarvedMeshCache> TE_CACHES = new WeakHashMap<>();
+
+   private static CarvedMeshCache cacheFor(TileEntityJoint te) {
+      CarvedMeshCache cache = TE_CACHES.get(te);
+
+      if (cache == null) {
+         cache = new CarvedMeshCache();
+         TE_CACHES.put(te, cache);
+      }
+
+      return cache;
    }
 
    /** 1.12.2 box carve ({@code renderBoxesCarvedModel}). */

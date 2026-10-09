@@ -1,6 +1,7 @@
 package jp.mc.ancientred.jointblock.registry;
 
 import jp.mc.ancientred.jointblock.JointBlockRemastered;
+import jp.mc.ancientred.jointblock.item.ItemJBBlueprint;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -79,6 +80,12 @@ public final class JBCreativeTab {
                 // ItemJBBlueprint: original func_150895_a adds damage 0 and 1 only
                 output.accept(JBItems.BluePrintItem.createSubtypedStack(0));
                 output.accept(JBItems.BluePrintItem.createSubtypedStack(1));
+                // Deliberate deviation: 1.12.2 never listed the capsule (damage 3) in the tab, so the
+                // "hold a capsule, import data with /jbid, right-click to throw the assembled unit"
+                // flow could only be reached from an existing capsule. The port lists it so the
+                // subtype is reachable directly. (The merchant blueprint, damage 2, stays tab-less as
+                // in 1.12.2: it is produced by the model catalog trade.)
+                output.accept(JBItems.BluePrintItem.createSubtypedStack(ItemJBBlueprint.TYPE_CAPSULE));
                 output.accept(JBItems.RingProgramItem);
                 output.accept(JBItems.TargetSightItem);
                 output.accept(JBItems.JBEffectItem);

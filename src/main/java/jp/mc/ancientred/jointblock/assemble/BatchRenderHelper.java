@@ -12,11 +12,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * <p>1.12.2 compiled each carved TE / joint part into a GL display list
  * ({@code GL11.glNewList(...)} / {@code GLCompiledListManager}) and replayed it with
- * {@code GL11.glCallList} until the carve data changed. That whole mechanism has no 1.20.1
- * equivalent: there is no display list API, {@code carvingsCompiled} state is not needed and the
- * vanilla renderer re-emits every frame. The {@code isCarvingCompiled}/{@code carvingCompiledListNum}
- * fields are still carried by {@link TileEntityJoint} and the joint parts (the mirror/sync code
- * resets them) but nothing consumes them here.
+ * {@code GL11.glCallList} until the carve data changed. There is no display list API in 1.20.1, so
+ * the equivalent lives in {@link jp.mc.ancientred.jointblock.model.render.CarvedMeshCache}: each
+ * carved part keeps its own local-space mesh and replays it until its carve data or palette change.
+ * The {@code isCarvingCompiled}/{@code carvingCompiledListNum} fields carried by
+ * {@link TileEntityJoint} are consumed again - {@code isCarvingCompiled} is cleared at every carve
+ * data write (as in 1.12.2) and set once the mesh has been rebuilt.
  *
  * <p>What remains is the reference's public shape: {@link #renderer} plus
  * {@link IBatchRenderer#compileOrRenderCarving}, which now defers to
@@ -44,13 +45,13 @@ public class BatchRenderHelper {
       @Override
       public void compileOrRenderCarving(JointPartsRenderable parts, int[] paletteData, PoseStack pose,
                                          MultiBufferSource bufferSource, int packedLight) {
-         CarvingRenderer.renderJointCarvedModelByType(parts, paletteData, pose, bufferSource, packedLight);
+         CarvingRenderer.renderJointCarvedModelCached(parts, paletteData, pose, bufferSource, packedLight);
       }
 
       @Override
       public void compileOrRenderCarving(TileEntityJoint te, int[] paletteData, PoseStack pose,
                                          MultiBufferSource bufferSource, int packedLight) {
-         CarvingRenderer.renderTeCarvedModelByType(te, paletteData, pose, bufferSource, packedLight);
+         CarvingRenderer.renderTeCarvedModelCached(te, paletteData, pose, bufferSource, packedLight);
       }
    }
 

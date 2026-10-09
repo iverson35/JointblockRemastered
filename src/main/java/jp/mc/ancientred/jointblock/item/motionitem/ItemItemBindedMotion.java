@@ -32,7 +32,9 @@ public class ItemItemBindedMotion extends AbstractMotionItem implements IJBMotio
 
    @Override
    public Component getName(ItemStack stack) {
-      return Component.translatable(this.getDescriptionId() + ".name").append(Component.translatable(ItemMotionBinder.seatNames[getSubtype(stack)]));
+      // 1.12.2 appended ".name" to the unlocalized name ("item.itemresmotionitem" + ".name");
+      // in 1.20.1 the description id already is the lang key (item.jointblock.itemresmotionitem).
+      return Component.translatable(this.getDescriptionId()).append(Component.translatable(ItemMotionBinder.seatNames[getSubtype(stack)]));
    }
 
    @Override

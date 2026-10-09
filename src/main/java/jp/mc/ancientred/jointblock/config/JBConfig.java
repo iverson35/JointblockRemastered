@@ -57,6 +57,7 @@ public final class JBConfig {
     public static boolean enableJointBlockParticle = true;
     public static boolean enableJointBlockSounds = true;
     public static boolean priorReceiveJBPacket = true;
+    /** 1.12.2 debug switch: re-emit every carved voxel each frame instead of replaying the cached mesh. */
     public static boolean disableCarvingGLCompile = false;
     public static int unitStatusBarOffsetX = 0;
     public static int unitStatusBarOffsetY = 0;

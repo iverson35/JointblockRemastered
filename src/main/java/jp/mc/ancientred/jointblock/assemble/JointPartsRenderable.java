@@ -19,6 +19,7 @@ import jp.mc.ancientred.jointblock.entity.EntityJointed;
 import jp.mc.ancientred.jointblock.entity.masterslave.MasterSlot;
 import jp.mc.ancientred.jointblock.gui.OverlayRendeler;
 import jp.mc.ancientred.jointblock.model.BasicJointRenderer;
+import jp.mc.ancientred.jointblock.model.render.CarvedMeshCache;
 import jp.mc.ancientred.jointblock.model.render.CarvingRenderer;
 import jp.mc.ancientred.jointblock.model.render.JBPoseHelper;
 import jp.mc.ancientred.jointblock.model.render.JBRenderTypes;
@@ -91,7 +92,8 @@ import org.joml.Matrix4f;
  *       {@code carvingCompiledListNum} through {@code GLCompiledListManager} is dropped, and the
  *       {@code Tessellator} flush in the failure handler has no counterpart (no open immediate-mode
  *       batch exists any more). {@link #isCarvingCompiled}/{@link #carvingCompiledListNum} are kept
- *       as data only, mirroring the ported fields on {@code TileEntityJoint}.</li>
+ *       as data only, mirroring the ported fields on {@code TileEntityJoint}; the compiled mesh
+ *       itself now lives in {@link #carvedMeshCache}.</li>
  * </ul>
  *
  * <p>The rotator/pivot branch reproduces the local-variable layout that the ported
@@ -106,7 +108,9 @@ public class JointPartsRenderable extends JointParts {
    private boolean failedOnRender = false;
    public int carvingType = 0;
    public MCubeGathered mCubeGatheredData;
-   /** 1.12.2 display-list bookkeeping; nothing is compiled in 1.20.1, kept for data compatibility. */
+   /** Local-space carved mesh of this part, replayed per frame instead of re-emitting every voxel. */
+   public final CarvedMeshCache carvedMeshCache = new CarvedMeshCache();
+   /** 1.12.2 display-list bookkeeping; the 1.20.1 equivalent is {@link #carvedMeshCache}. */
    public boolean isCarvingCompiled = false;
    /** 1.12.2 display-list handle; always 0 in the 1.20.1 port. */
    public int carvingCompiledListNum = 0;

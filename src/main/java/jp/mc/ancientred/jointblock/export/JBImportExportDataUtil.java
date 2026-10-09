@@ -2,11 +2,6 @@ package jp.mc.ancientred.jointblock.export;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.awt.Toolkit;
-import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.zip.Deflater;
@@ -21,11 +16,14 @@ import jp.mc.ancientred.jointblock.item.ItemJBBlueprint;
 import jp.mc.ancientred.jointblock.item.ItemJBCopyTool;
 import jp.mc.ancientred.jointblock.item.ItemRingProgram;
 import jp.mc.ancientred.jointblock.packet.JBPacketSender;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Port of the 1.12.2 {@code JBImportExportDataUtil}: clipboard (Base64) import/export of
@@ -40,6 +38,14 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>{@code importAssembleData(EntityPlayer, boolean)} could not be decompiled; it was
  * reconstructed from the class file bytecode — see the method comment.
+ *
+ * <p>The clipboard is read/written through the game's own clipboard
+ * ({@code Minecraft#keyboardHandler}, i.e. GLFW) instead of 1.12.2's {@code java.awt.Toolkit}:
+ * the 1.20.1 client JVM runs headless ({@code java.awt.headless=true}), so every AWT clipboard
+ * call threw {@code HeadlessException} and {@code /jbid} answered "no data on the clipboard"
+ * while {@code /jbed} silently wrote nothing. GLFW's clipboard is main-thread only, so the
+ * single-player shortcut (where the integrated server used to read the clipboard itself) now
+ * receives the already parsed tag — see {@link #takeImportedAssembleDataForSingle()}.
  */
 public class JBImportExportDataUtil {
    public static final byte FORMAT_CARVING_NORMAL = 1;
@@ -52,6 +58,12 @@ public class JBImportExportDataUtil {
    public static final int SEND_EXCEPTION = 1;
    public static final int SEND_TOO_LARGE = 2;
    public static Long s_requestToken = null;
+   /**
+    * Single-player hand-off: the tag parsed from the client clipboard by {@link #importAssembleData},
+    * consumed by the integrated server thread through {@code CommonProxy#getNBTImportDataAsSingle}
+    * (it cannot read the GLFW clipboard itself).
+    */
+   private static CompoundTag s_importedAssembleDataForSingle = null;
 
    public static void importJBData(Player player, String[] params) {
       if (!player.level().isClientSide) {
@@ -440,6 +452,19 @@ public class JBImportExportDataUtil {
    private static void importAssembleData(Player player, boolean seal) {
       MinecraftServer integratedServer = JBModContainer.proxy.getIntegratedServer();
       if (integratedServer != null && integratedServer.isRunning() && !integratedServer.isStopped() && integratedServer.isSingleplayer()) {
+         CompoundTag dataTag;
+         try {
+            dataTag = getBase64edNBTFromClientClipboard(player);
+         } catch (IOException e) {
+            handleUnknownImportError(player, e);
+            return;
+         }
+
+         if (dataTag == null) {
+            return;
+         }
+
+         s_importedAssembleDataForSingle = dataTag;
          JBPacketSender.sendImportedAssembleData(null, seal, true);
          return;
       }
@@ -553,27 +578,26 @@ public class JBImportExportDataUtil {
       }
    }
 
-   private static String getClipboardString() {
-      try {
-         Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents((Object)null);
-         if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-            return (String)transferable.getTransferData(DataFlavor.stringFlavor);
-         }
-      } catch (Exception var1) {
-         var1.printStackTrace();
-      }
-
-      return "";
+   /** Takes the tag handed over by {@link #importAssembleData}; called on the integrated server thread. */
+   @OnlyIn(Dist.CLIENT)
+   public static CompoundTag takeImportedAssembleDataForSingle() {
+      CompoundTag tag = s_importedAssembleDataForSingle;
+      s_importedAssembleDataForSingle = null;
+      return tag;
    }
 
-   private static void setClipboardString(String string) {
-      try {
-         StringSelection stringselection = new StringSelection(string);
-         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringselection, (ClipboardOwner)null);
-      } catch (Exception var2) {
-         var2.printStackTrace();
-      }
+   @OnlyIn(Dist.CLIENT)
+   private static String getClipboardString() {
+      Minecraft mc = Minecraft.getInstance();
+      return mc == null ? "" : mc.keyboardHandler.getClipboard();
+   }
 
+   @OnlyIn(Dist.CLIENT)
+   private static void setClipboardString(String string) {
+      Minecraft mc = Minecraft.getInstance();
+      if (mc != null) {
+         mc.keyboardHandler.setClipboard(string);
+      }
    }
 
    private static void handleUnknownImportError(Player player, Exception ex) {
