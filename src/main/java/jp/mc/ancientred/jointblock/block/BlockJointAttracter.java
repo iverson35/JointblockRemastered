@@ -14,6 +14,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BlockJointAttracter extends BlockJointBase {
    @Override
+   public int getJointType() {
+      return 15;
+   }
+
+   @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
       return new TileEntityJointAttracter(pos, state);
    }

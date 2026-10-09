@@ -17,6 +17,11 @@ import net.minecraft.world.phys.BlockHitResult;
 
 public class BlockJointCore extends BlockJointBase {
    @Override
+   public int getJointType() {
+      return 0;
+   }
+
+   @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
       return new TileEntityJointCore(pos, state);
    }

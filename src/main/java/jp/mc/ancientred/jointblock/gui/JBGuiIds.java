@@ -26,4 +26,11 @@ public final class JBGuiIds {
     public static final int guiJointCoreSoundsId = 4608;
     public static final int guiJointCoreFuelsFromEntityId = 4609;
     public static final int guiJointCoreFuelsFromBlockId = 4610;
+
+    /**
+     * 1.12.2 {@code JBRobotMODContainer.guiModelCatalogId}: the addon's model catalog, opened by the
+     * {@code jbrobot:jbrobot_catalog} item. Unlike the 14 ids above it belongs to the addon mod, but
+     * it shares the same {@code IGuiHandler} dispatch and the same wire id, so it lives here too.
+     */
+    public static final int guiModelCatalogId = 5596;
 }

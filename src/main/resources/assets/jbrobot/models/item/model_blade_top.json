@@ -1,0 +1,11 @@
+{
+  "parent": "jbrobot:item/model_blade_top_a",
+  "overrides": [
+    {
+      "predicate": {
+        "jbrobot:meta": 1
+      },
+      "model": "jbrobot:item/model_blade_top_b"
+    }
+  ]
+}

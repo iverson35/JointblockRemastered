@@ -8,6 +8,11 @@ import net.minecraft.world.level.block.state.BlockState;
 public class BlockJointRotator extends BlockJointBase {
    @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-      return new TileEntityJoint(8, new int[]{1, 0, 0, 0}, pos, state);
+      return new TileEntityJoint(this.getJointType(), new int[]{1, 0, 0, 0}, pos, state);
+   }
+
+   @Override
+   public int getJointType() {
+      return 8;
    }
 }

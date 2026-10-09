@@ -20,6 +20,9 @@ import jp.mc.ancientred.jointblock.tileentity.render.TileEntityJointerRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelEvent;
+import jp.mc.ancientred.jointblock.item.IColorHanldlerItem;
+import jp.mc.ancientred.jointblock.registry.JBItems;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -53,7 +56,12 @@ public final class JBClientSetup {
         event.registerEntityRenderer(jp.mc.ancientred.jointblock.registry.JBClientEntityTypes.CLIENT_CAMERA,
             RenderEntityJBClientCamera::new);
 
+        // Every joint block returns RenderShape.ENTITYBLOCK_ANIMATED, so its in-world model comes
+        // from this renderer alone - the three block entity types all extend TileEntityJoint and
+        // share it (1.12.2 bound one TileEntitySpecialRenderer to all of them).
         event.registerBlockEntityRenderer(JBBlockEntityTypes.JOINT, TileEntityJointerRenderer::new);
+        event.registerBlockEntityRenderer(JBBlockEntityTypes.JOINT_CORE, TileEntityJointerRenderer::new);
+        event.registerBlockEntityRenderer(JBBlockEntityTypes.JOINT_ATTRACTER, TileEntityJointerRenderer::new);
         event.registerBlockEntityRenderer(JBBlockEntityTypes.JB_ENTITY_BATCHER, TileEntityJBEntityBatcherRenderer::new);
     }
 
@@ -69,6 +77,20 @@ public final class JBClientSetup {
      * has no {@code RegisterMenuScreensEvent} in this version, so the screens are registered here
      * (work is deferred to the main thread by {@code enqueueWork}).
      */
+    /**
+     * 1.12.2 {@code CommonProxyClient.registerRenderHelper} registered one {@code ItemColors} handler
+     * for the items that implement {@code IColorHanldlerItem}; without it 1.20.1 renders them with the
+     * raw texture and the motion/mouse/putty tint tables are never read.
+     */
+    @SubscribeEvent
+    public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register((stack, tintIndex) -> IColorHanldlerItem.safeCast(stack.getItem()).getColorFromItemStack(stack, tintIndex),
+                JBItems.KeyBindedMotionItem, JBItems.ItemBindedMotionItem, JBItems.HumanUpperMotionItem,
+                JBItems.HumanLowerMotionItem, JBItems.BeastLowerMotionItem, JBItems.InsectsMotionItem,
+                JBItems.MachineMotionItem, JBItems.SensorMotionItem, JBItems.RingMotionItem,
+                JBItems.CeramicPuttyItem, JBItems.JBMouseItem);
+    }
+
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {

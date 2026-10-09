@@ -74,6 +74,15 @@ public final class JBModContainer {
     public static final byte PACKET_TYPE_SOUND_GUIACT = 50;
     public static final byte PACKET_TYPE_SOUND_ENTITYEVENT = 52;
 
+    /**
+     * 1.20.1 addition (no 1.12.2 counterpart). The 1.12.2 seats were real world entities, so the
+     * vanilla {@code SPacketSetPassengers} carrying a seat id resolved on the client. The ported
+     * seats are Forge {@code PartEntity} objects that no level entity lookup contains, so the
+     * vanilla passenger packet is dropped client side; this packet carries the parent entity id and
+     * the seat index instead, which the client can resolve.
+     */
+    public static final byte PACKET_TYPE_SEAT_RIDE_SYNC = 54;
+
     public static final byte PACKET_SUBTYPE_IMPORT_CARVING_DATA = 10;
     public static final byte PACKET_SUBTYPE_IMPORT_PALETTE_DATA = 20;
     public static final byte PACKET_SUBTYPE_IMPORT_ASSEMBLE_DATA = 30;

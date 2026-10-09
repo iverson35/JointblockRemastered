@@ -8,6 +8,12 @@ import jp.mc.ancientred.jointblock.command.JBCommands;
 import jp.mc.ancientred.jointblock.common.CapabilityEntityCommonStorage;
 import jp.mc.ancientred.jointblock.common.CommonProxyClient;
 import jp.mc.ancientred.jointblock.common.CommonProxyServer;
+import jp.mc.ancientred.jbrobot.JBRobotMODContainer;
+import jp.mc.ancientred.jbrobot.packet.JBRNetwork;
+import jp.mc.ancientred.jbrobot.registry.JBRCreativeTab;
+import jp.mc.ancientred.jbrobot.registry.JBRItems;
+import jp.mc.ancientred.jbrobot.registry.JBRMenuTypes;
+import jp.mc.ancientred.jointblock.common.CommonForgeEventHandler;
 import jp.mc.ancientred.jointblock.config.JBConfig;
 import jp.mc.ancientred.jointblock.effect.JBSoundManager;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
@@ -31,6 +37,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
@@ -81,12 +88,27 @@ public class JointBlockRemastered {
         JBCreativeTab.register(modBus);
         JBMenuTypes.register(modBus);
 
+        // Addon half (1.12.2 mod modj_jbrobot): scan <config>/JointBlock for model packs and register
+        // one item per pack. 1.12.2 did this in the addon's preInit; 1.20.1 items have to exist before
+        // the registry events fire, so the scan runs in the constructor.
+        JBRobotMODContainer.init(JBModContainer.configDir);
+        JBRobotMODContainer.register(modBus);
+        JBRItems.register(modBus);
+        JBRCreativeTab.register(modBus);
+        JBRMenuTypes.register(modBus);
+        JBRNetwork.register();
+
         modBus.addListener(this::onEntityAttributeCreation);
         modBus.addListener(this::onRegisterCapabilities);
         modBus.addListener(this::onCommonSetup);
 
         JBNetwork.register();
         JBCommands.register();
+
+        // 1.12.2 JBModContainer.preInit registered a CommonForgeEventHandler instance on the Forge bus
+        // (login sync, capability attach, mount/item-toss/attack hooks). The ported class kept every
+        // handler but was never wired, so those hooks never ran.
+        MinecraftForge.EVENT_BUS.register(new CommonForgeEventHandler());
     }
 
     /**
@@ -100,6 +122,9 @@ public class JointBlockRemastered {
             ModelBlockRegister.registerAllowedModelBlocks();
             JBModContainer.soundManager.setupDefaultItemList();
             BasicMotionBinder.instance = new BasicMotionBinder();
+            // 1.12.2 addon postInit/serverLoad: resolve the pack items, price the catalog and build
+            // the blueprint stacks; needs the registry events to have run, hence common setup.
+            JBRobotMODContainer.onCommonSetup();
         });
     }
 

@@ -5,22 +5,29 @@ import jp.mc.ancientred.jointblock.JointBlockRemastered;
 import jp.mc.ancientred.jointblock.assemble.EntryFormats;
 import jp.mc.ancientred.jointblock.assemble.TargetSelect;
 import jp.mc.ancientred.jointblock.assemble.tuning.StaticClientTuningStates;
+import jp.mc.ancientred.jointblock.block.BlockJointBase;
+import jp.mc.ancientred.jointblock.carving.JBCarvingClientUtil;
 import jp.mc.ancientred.jointblock.carving.prebuild.PrebuildWriter;
 import jp.mc.ancientred.jointblock.config.JBConfig;
 import jp.mc.ancientred.jointblock.config.JBKeyHanlder;
 import jp.mc.ancientred.jointblock.entity.EntityJBClientCamera;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
 import jp.mc.ancientred.jointblock.entity.EntitySeatPart;
+import jp.mc.ancientred.jointblock.item.ICeramicModBoundItem;
 import jp.mc.ancientred.jointblock.item.ItemJBTargetSight;
+import jp.mc.ancientred.jointblock.tileentity.TileEntityJoint;
 import jp.mc.ancientred.jointblock.tileentity.render.TileEntityJBEntityBatcherRenderer;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -28,6 +35,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.RenderHighlightEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ViewportEvent;
@@ -100,6 +108,7 @@ import org.lwjgl.glfw.GLFW;
 public class ClientEventhandler {
    /** 1.12.2 {@code languagePrev}: detected language changes re-init the entry formats. */
    private static String languagePrev = "";
+   private static long lastHighlightLog;
    /** 1.12.2 {@code cancelRenderHand}: set while the seat camera is active, consumed by {@link #onRenderHand}. */
    private static boolean cancelRenderHand = false;
    /** 1.12.2 {@code needCameraRollReset}: raised while a JB camera is active, cleared when it is not. */
@@ -354,6 +363,42 @@ public class ClientEventhandler {
          event.setCanceled(true);
       }
 
+   }
+
+   /**
+    * 1.12.2 {@code CommonForgeEventHandler#onDrawBlockHighlight} ->
+    * {@code CommonProxyClient#processJBSelectionBoundingBox}: while the player holds a carving tool
+    * and looks at a carveable joint block, draw the mod's own carved hit box instead of the vanilla
+    * block outline. The port had {@code JBCarvingClientUtil#drawJBCarvedBoundingBox} but never wired
+    * the event, so the carved (green) box never appeared.
+    */
+   @SubscribeEvent
+   public static void onDrawBlockHighlight(RenderHighlightEvent.Block event) {
+      Player player = Minecraft.getInstance().player;
+      if (player == null) {
+         return;
+      }
+
+      ItemStack stack = CompatHelper.getCurrentEquippedItem(player);
+      if (CompatHelper.isStackEmptyOrNull(stack) || !(stack.getItem() instanceof ICeramicModBoundItem)) {
+         return;
+      }
+
+      BlockPos pos = event.getTarget().getBlockPos();
+      Level level = player.level();
+      if (!(level.getBlockState(pos).getBlock() instanceof BlockJointBase)) {
+         return;
+      }
+
+      TileEntityJoint te = BlockJointBase.getTileEntityJointerBase(level, pos.getX(), pos.getY(), pos.getZ());
+      if (te != null && te.isValidCarveable()) {
+         if (System.currentTimeMillis() - lastHighlightLog > 500L) {
+            lastHighlightLog = System.currentTimeMillis();
+            JointBlockRemastered.LOGGER.info("[JBHILITE] drawing carved box for {}", pos);
+         }
+         JBCarvingClientUtil.drawJBCarvedBoundingBox(event, te);
+         event.setCanceled(true);
+      }
    }
 
    @SubscribeEvent

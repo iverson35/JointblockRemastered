@@ -1,12 +1,15 @@
 package jp.mc.ancientred.jointblock.item;
 
+import java.util.function.Consumer;
 import jp.mc.ancientred.jointblock.block.BlockJointBase;
 import jp.mc.ancientred.jointblock.common.CompatHelper;
 import jp.mc.ancientred.jointblock.common.EnumDirectionOld;
 import jp.mc.ancientred.jointblock.common.JBCommonUtil;
 import jp.mc.ancientred.jointblock.common.JBRotationUtil;
+import jp.mc.ancientred.jointblock.item.model.JointItemRenderer;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJoint;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,6 +29,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 
 public class ItemFacingJointBlock extends BlockItem {
    public ItemFacingJointBlock(Block block) {
@@ -133,5 +137,27 @@ public class ItemFacingJointBlock extends BlockItem {
       }
 
       return 0;
+   }
+
+   /**
+    * The joint items use the {@code builtin/entity} model, which renders through the joint model
+    * instead of a baked one (1.12.2 did this with {@code Item.setTileEntityItemStackRenderer}).
+    * {@code initializeClient} only runs on the client, so the client-only renderer stays out of the
+    * dedicated-server class path.
+    */
+   @Override
+   public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+      consumer.accept(new IClientItemExtensions() {
+         private BlockEntityWithoutLevelRenderer renderer;
+
+         @Override
+         public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            if (this.renderer == null) {
+               this.renderer = new JointItemRenderer(((BlockJointBase)ItemFacingJointBlock.this.getBlock()).getJointType());
+            }
+
+            return this.renderer;
+         }
+      });
    }
 }

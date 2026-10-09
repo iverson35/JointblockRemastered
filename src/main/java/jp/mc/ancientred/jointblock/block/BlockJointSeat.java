@@ -15,7 +15,7 @@ public class BlockJointSeat extends BlockJointBase {
 
    @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-      return new TileEntityJoint(2, new int[]{1, 2, 0, 0}, pos, state);
+      return new TileEntityJoint(this.getJointType(), new int[]{1, 2, 0, 0}, pos, state);
    }
 
    @Override
@@ -30,5 +30,10 @@ public class BlockJointSeat extends BlockJointBase {
 
    private boolean isSeat(TileEntityJoint te) {
       return te.initValues == null || te.initValues[0] == null || te.initValues[0].length < 3 || te.initValues[0][2] == 0;
+   }
+
+   @Override
+   public int getJointType() {
+      return 2;
    }
 }

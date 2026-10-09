@@ -16,9 +16,9 @@ import jp.mc.ancientred.jointblock.gui.JBGuiIds;
 import jp.mc.ancientred.jointblock.item.ItemDisassembleBall;
 import jp.mc.ancientred.jointblock.item.ItemJBAssemblyTuner;
 import jp.mc.ancientred.jointblock.packet.JBPacketSender;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -221,9 +221,9 @@ public class EntitySeatPart extends PartEntity<EntityJointed> implements IIgnore
          Entity entityRidenBy = CompatHelper.getRiddenByEntity(this);
          if (this.prevRiddenByEntity != entityRidenBy) {
             this.prevRiddenByEntity = entityRidenBy;
-            if (this.level() instanceof ServerLevel serverLevel) {
-               serverLevel.getChunkSource().broadcastAndSend(this.entityJointed, new ClientboundSetPassengersPacket(this));
-            }
+            // 1.12.2 broadcast ClientboundSetPassengersPacket(this) here; the client cannot resolve a
+            // PartEntity vehicle id, so the mod's own seat sync packet carries parent id + seat index.
+            JBPacketSender.sendSeatRideSyncToPlayers(this.entityJointed, this, entityRidenBy, entityRidenBy != null);
          }
       }
    }
@@ -327,13 +327,9 @@ public class EntitySeatPart extends PartEntity<EntityJointed> implements IIgnore
 
          if (this.playerReRidingSearchTick > 0 && this.playerReRidingSearchTick % 20 == 0
             || this.entityJointed.tickCount % 60 == 0 && !this.level().isClientSide && this.level() instanceof ServerLevel) {
-            if (passenger instanceof ServerPlayer serverPlayer) {
-               serverPlayer.connection.send(new ClientboundSetPassengersPacket(this));
-            }
-
-            if (this.level() instanceof ServerLevel serverLevel) {
-               serverLevel.getChunkSource().broadcastAndSend(passenger, new ClientboundSetPassengersPacket(this));
-            }
+            // 1.12.2 re-sent ClientboundSetPassengersPacket(this) here; a PartEntity id is not
+            // resolvable client side, so the periodic re-sync uses the mod's seat packet.
+            JBPacketSender.sendSeatRideSyncToPlayers(this.entityJointed, this, passenger, true);
          }
       }
 
@@ -550,7 +546,10 @@ public class EntitySeatPart extends PartEntity<EntityJointed> implements IIgnore
          this.isRiddenbyDoublePressedJumpKeyTick = 0;
       }
 
-      if (sp.input.shiftKeyDown) {
+      // 1.20.1 LocalPlayer#rideTick clears input.shiftKeyDown on every tick while the player wants
+      // to stop riding (Player#wantsToStopRiding), and the player entity ticks before the machine,
+      // so reading only the input state would never see the sneak key. The raw key is the truth.
+      if (sp.input.shiftKeyDown || Minecraft.getInstance().options.keyShift.isDown()) {
          this.isRiddenbyDoublePressedSneakKey = false;
          if (!this.isRiddenbyPressingSneakKey) {
             if (this.isRiddenbyDoublePressedSneakKeyTick > 0) {

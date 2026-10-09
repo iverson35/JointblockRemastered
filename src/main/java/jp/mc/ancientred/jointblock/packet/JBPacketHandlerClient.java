@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import jp.mc.ancientred.jointblock.JBModContainer;
 import jp.mc.ancientred.jointblock.JointBlockRemastered;
 import jp.mc.ancientred.jointblock.assemble.EjTarget;
+import jp.mc.ancientred.jointblock.common.CompatHelper;
 import jp.mc.ancientred.jointblock.config.JBConfig;
 import jp.mc.ancientred.jointblock.effect.EffectSlot;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
+import jp.mc.ancientred.jointblock.entity.EntitySeatPart;
 import jp.mc.ancientred.jointblock.entity.ExplosionEx;
 import jp.mc.ancientred.jointblock.entity.masterslave.AbstractSlaveAttatcher;
 import jp.mc.ancientred.jointblock.export.JBCompressToolHelper;
@@ -105,6 +107,11 @@ public class JBPacketHandlerClient {
             playEntityJBSoundOnClient(data);
             return false;
          }
+
+         if (packetType == JBNetwork.PACKET_TYPE_SEAT_RIDE_SYNC) {
+            receiveSeatRideSync(data);
+            return false;
+         }
       } catch (Exception var4) {
          JointBlockRemastered.LOGGER.debug("Error handling JB SERVER-CLIENT Packet :{}", packetType, var4);
       }
@@ -145,6 +152,57 @@ public class JBPacketHandlerClient {
          JointBlockRemastered.LOGGER.debug("[JointBlock]Expected Error In:updateEntityJointHeightOnClient:Will be fixed in future");
       } catch (Exception var11) {
          var11.printStackTrace();
+      }
+
+   }
+
+   /**
+    * Client half of {@link JBPacketSender#sendSeatRideSyncToPlayers}.
+    *
+    * <p>The seat cannot be resolved through {@code level.getEntity(int)} (a Forge
+    * {@code PartEntity} is in no level entity storage), so the packet carries the parent entity id
+    * and the seat index and the seat is taken from the parent's part array - the same objects the
+    * client picks and renders. This is the sync leg the 1.12.2 port got for free from the vanilla
+    * passenger packet, because the 1.12.2 seats were real world entities.
+    */
+   private static void receiveSeatRideSync(FriendlyByteBuf data) {
+      try {
+         int parentEntityId = data.readInt();
+         int seatNum = data.readByte();
+         boolean riding = data.readBoolean();
+         int passengerEntityId = data.readInt();
+         ClientLevel worldClient = Minecraft.getInstance().level;
+         if (worldClient == null) {
+            return;
+         }
+
+         Entity parent = worldClient.getEntity(parentEntityId);
+         if (!(parent instanceof EntityJointed)) {
+            return;
+         }
+
+         EntityJointed entityJointed = (EntityJointed)parent;
+         if (seatNum < 0 || seatNum >= entityJointed.entitySeatPartArray.length) {
+            return;
+         }
+
+         EntitySeatPart seatPart = entityJointed.entitySeatPartArray[seatNum];
+         Entity passenger = passengerEntityId < 0 ? CompatHelper.getRiddenByEntity(seatPart) : worldClient.getEntity(passengerEntityId);
+         if (riding) {
+            if (passenger != null && passenger.getVehicle() != seatPart) {
+               passenger.startRiding(seatPart, true);
+            }
+         } else {
+            if (passenger != null && passenger.getVehicle() == seatPart) {
+               passenger.stopRiding();
+            }
+
+            seatPart.ejectPassengers();
+         }
+      } catch (NullPointerException var8) {
+         JointBlockRemastered.LOGGER.debug("[JointBlock]Expected Error In:receiveSeatRideSync:Will be fixed in future");
+      } catch (Exception var9) {
+         var9.printStackTrace();
       }
 
    }

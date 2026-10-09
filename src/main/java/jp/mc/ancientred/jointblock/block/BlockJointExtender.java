@@ -19,7 +19,7 @@ public class BlockJointExtender extends BlockJointBase {
 
    @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-      return new TileEntityJoint(10, new int[]{100, 100, 100, 0}, pos, state);
+      return new TileEntityJoint(this.getJointType(), new int[]{100, 100, 100, 0}, pos, state);
    }
 
    @Override
@@ -45,5 +45,10 @@ public class BlockJointExtender extends BlockJointBase {
       AABB_X = Shapes.box(0.0, (double)LW, (double)LW, 1.0, (double)HI, (double)HI);
       AABB_Y = Shapes.box((double)LW, 0.0, (double)LW, (double)HI, 1.0, (double)HI);
       AABB_Z = Shapes.box((double)LW, (double)LW, 0.0, (double)HI, (double)HI, 1.0);
+   }
+
+   @Override
+   public int getJointType() {
+      return 10;
    }
 }

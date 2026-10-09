@@ -57,6 +57,12 @@ public abstract class BlockJointBase extends BaseEntityBlock {
       this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
    }
 
+   /**
+    * Joint type this block builds when placed (0 core, 2 seat, 4 normal, 8 rotator, 10 extender,
+    * 12 scaler, 14 slider, 15 attracter). Also selects the joint model the block item renders.
+    */
+   public abstract int getJointType();
+
    @Override
    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
       builder.add(FACING);

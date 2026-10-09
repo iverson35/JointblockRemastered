@@ -1,0 +1,11 @@
+{
+  "parent": "jbrobot:item/model_bazooka_head_r",
+  "overrides": [
+    {
+      "predicate": {
+        "jbrobot:meta": 1
+      },
+      "model": "jbrobot:item/model_bazooka_head_m"
+    }
+  ]
+}

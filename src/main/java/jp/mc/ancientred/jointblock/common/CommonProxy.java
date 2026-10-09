@@ -47,17 +47,8 @@ public class CommonProxy {
                if (ej.slaveAttatcher != null) {
                   ej.slaveAttatcher.resumePrevValues(ej);
                }
-
-               for(int seatId = 0; seatId < ej.entitySeatPartArray.length; ++seatId) {
-                  EntitySeatPart seatPart = ej.entitySeatPartArray[seatId];
-                  Entity riddenBy = CompatHelper.getRiddenByEntity(seatPart);
-                  if (seatPart != null) {
-                     boolean savedURY = seatPart.updateRidersYaw;
-                     seatPart.updateRidersYaw = false;
-                     seatPart.positionRider(riddenBy);
-                     seatPart.updateRidersYaw = savedURY;
-                  }
-               }
+               // The riders of the seat parts are positioned by EntityJointed#tickSeatParts through
+               // the vanilla Level#tickPassenger -> Entity#rideTick -> Entity#positionRider chain.
             } catch (Exception var12) {
                var12.printStackTrace();
             } finally {
@@ -142,7 +133,11 @@ public class CommonProxy {
 
    protected void openGui(int guiId, Player player, Level level, BlockPos pos, EntityJointed entityJointed) {
       if (player instanceof ServerPlayer serverPlayer) {
-         if (entityJointed != null) {
+         if (guiId == jp.mc.ancientred.jointblock.gui.JBGuiIds.guiModelCatalogId) {
+            // 1.12.2 JBRobotMODContainer.guiModelCatalogId: the addon's catalog, item opened and
+            // therefore without a block or entity to carry.
+            JBGuiOpener.openCatalogGui(serverPlayer);
+         } else if (entityJointed != null) {
             JBGuiOpener.openEntityGui(guiId, serverPlayer, entityJointed);
          } else {
             JBGuiOpener.openBlockGui(guiId, serverPlayer, level, pos);

@@ -59,6 +59,7 @@ public final class JBNetwork {
     public static final byte PACKET_TYPE_TARGET_SELECT = JBModContainer.PACKET_TYPE_TARGET_SELECT;
     public static final byte PACKET_TYPE_SOUND_GUIACT = JBModContainer.PACKET_TYPE_SOUND_GUIACT;
     public static final byte PACKET_TYPE_SOUND_ENTITYEVENT = JBModContainer.PACKET_TYPE_SOUND_ENTITYEVENT;
+    public static final byte PACKET_TYPE_SEAT_RIDE_SYNC = JBModContainer.PACKET_TYPE_SEAT_RIDE_SYNC;
 
     public static final byte PACKET_SUBTYPE_IMPORT_CARVING_DATA = JBModContainer.PACKET_SUBTYPE_IMPORT_CARVING_DATA;
     public static final byte PACKET_SUBTYPE_IMPORT_PALETTE_DATA = JBModContainer.PACKET_SUBTYPE_IMPORT_PALETTE_DATA;

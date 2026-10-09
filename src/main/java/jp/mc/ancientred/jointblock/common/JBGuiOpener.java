@@ -91,6 +91,16 @@ public final class JBGuiOpener {
         }
     }
 
+    /**
+     * 1.12.2 {@code JBRobotMODContainer.guiModelCatalogId}: the addon's model catalog. It is opened by
+     * an item ({@code jbrobot:jbrobot_catalog}) and carries nothing beyond the player, so no payload is
+     * written to the open-screen buffer (see {@code jbrobot.registry.JBRMenuTypes}).
+     */
+    public static void openCatalogGui(ServerPlayer player) {
+        NetworkHooks.openScreen(player, new SimpleMenuProvider(
+            (containerId, inv, p) -> new jp.mc.ancientred.jbrobot.gui.ContainerModelCatalog(containerId, inv), NO_TITLE));
+    }
+
     private static MenuProvider blockProvider(int guiId, Level level, BlockPos pos) {
         if (guiId == JBGuiIds.guiJointBlockId) {
             TileEntityJoint te = BlockJointBase.getTileEntityJointerBase(level, pos.getX(), pos.getY(), pos.getZ());

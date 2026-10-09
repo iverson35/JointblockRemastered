@@ -10,11 +10,13 @@ import jp.mc.ancientred.jointblock.common.JBCommonUtil;
 import jp.mc.ancientred.jointblock.config.JBConfig;
 import jp.mc.ancientred.jointblock.effect.EffectSlot;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
+import jp.mc.ancientred.jointblock.entity.EntitySeatPart;
 import jp.mc.ancientred.jointblock.export.JBCompressToolHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -562,6 +564,37 @@ public class JBPacketSender {
          buffef.writeByte(JBNetwork.PACKET_TYPE_SOUND_ENTITYEVENT);
          buffef.writeInt(entityJointed.getId());
          buffef.writeByte(soundSlotNum);
+         JBNetwork.sendToPlayersAround(entityJointed.level().dimension(), entityJointed.getX(), entityJointed.getY(), entityJointed.getZ(), new JBNetwork.Payload(buffef));
+      } catch (Exception var8) {
+         var8.printStackTrace();
+      }
+
+   }
+
+   /**
+    * Tells the clients tracking {@code entityJointed} that {@code passenger} started or stopped
+    * riding {@code seat}.
+    *
+    * <p>Replaces the 1.12.2 {@code ClientboundSetPassengersPacket} sends: the seat is a Forge
+    * {@code PartEntity}, and 1.20.1's {@code ClientPacketListener.handleSetEntityPassengersPacket}
+    * resolves the vehicle through {@code level.getEntity(id)}, which only searches the level entity
+    * storage. Parts are not stored there, so every such packet was dropped with "Received passengers
+    * for unknown entity" and the rider never appeared mounted on the client (the server did mount
+    * it, which is why the machine still followed the ghost rider's yaw).
+    *
+    * <p>The payload carries the parent entity id (always resolvable) plus the seat index, so the
+    * client resolves the seat through {@code EntityJointed.getParts()} - the same part objects the
+    * client picks and renders.
+    */
+   public static void sendSeatRideSyncToPlayers(EntityJointed entityJointed, EntitySeatPart seat, Entity passenger, boolean riding) {
+      FriendlyByteBuf buffef = newBuffer();
+
+      try {
+         buffef.writeByte(JBNetwork.PACKET_TYPE_SEAT_RIDE_SYNC);
+         buffef.writeInt(entityJointed.getId());
+         buffef.writeByte(seat.seatNum);
+         buffef.writeBoolean(riding);
+         buffef.writeInt(passenger == null ? -1 : passenger.getId());
          JBNetwork.sendToPlayersAround(entityJointed.level().dimension(), entityJointed.getX(), entityJointed.getY(), entityJointed.getZ(), new JBNetwork.Payload(buffef));
       } catch (Exception var8) {
          var8.printStackTrace();

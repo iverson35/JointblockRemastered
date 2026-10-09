@@ -57,7 +57,6 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -608,6 +607,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       if (this.getMasterEntityIfConnected() != this && this.slaveAttatcher != null) {
          if (this.isDelayedUpdate) {
             super.tick();
+            this.tickSeatParts();
          } else {
             this.slaveAttatcher.savePrevValues(this);
             if (this.level().isClientSide) {
@@ -618,16 +618,56 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
          }
       } else {
          super.tick();
+         this.tickSeatParts();
       }
-      // 1.12.2 spawned the EntitySeatPart children into the world (World.spawnEntity) so the world
-      // ticked them. PartEntity children are not in the level in 1.20.1, so the parent drives them.
-      if (this.entitySeatPartArray != null) {
-         for (int i = 0; i < this.entitySeatPartArray.length; ++i) {
-            EntitySeatPart seatPart = this.entitySeatPartArray[i];
-            if (seatPart != null) {
-               seatPart.tick();
-            }
+   }
+
+   /**
+    * 1.12.2 spawned the EntitySeatPart children into the world (World.spawnEntity) so the world
+    * ticked them and, through {@code Level#tickPassenger}, the player riding one of them. In 1.20.1
+    * the seats are PartEntity children - ServerLevel skips PartEntity instances and ClientLevel
+    * skips passengers - and the machine's own passenger list is always empty, so nothing ticks
+    * either the seat parts or their riders. The parent drives both, exactly like
+    * {@code ServerLevel#tickNonPassenger} does for a real vehicle.
+    */
+   private void tickSeatParts() {
+      if (this.entitySeatPartArray == null) {
+         return;
+      }
+
+      for (int i = 0; i < this.entitySeatPartArray.length; ++i) {
+         EntitySeatPart seatPart = this.entitySeatPartArray[i];
+         if (seatPart == null) {
+            continue;
          }
+
+         seatPart.tick();
+         for (Entity rider : seatPart.getPassengers()) {
+            this.tickSeatRider(seatPart, rider);
+         }
+      }
+   }
+
+   /**
+    * Counterpart of {@code ServerLevel#tickPassenger}/{@code ClientLevel#tickPassenger} (both are
+    * private): the seat parts carry the riders, so the parent has to run the passenger chain itself.
+    * Without it a rider is never ticked at all - the level skips passengers and PartEntity children -
+    * which left the client's LocalPlayer unable to send its rotation and input packets.
+    */
+   private void tickSeatRider(Entity vehicle, Entity rider) {
+      if (rider.isRemoved() || rider.getVehicle() != vehicle) {
+         rider.stopRiding();
+         return;
+      }
+
+      rider.setOldPosAndRot();
+      ++rider.tickCount;
+      if (rider.canUpdate()) {
+         rider.rideTick();
+      }
+
+      for (Entity nested : rider.getPassengers()) {
+         this.tickSeatRider(rider, nested);
       }
    }
 
@@ -1374,7 +1414,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       this.setOnGround(false);
       double dummyMotionY = -1.0;
       AABB box = this.getBoundingBox();
-      AABB below = box.inflate(0.0, -1.0, 0.0);
+      AABB below = box.expandTowards(0.0, -1.0, 0.0);
       for (VoxelShape shape : this.level().getBlockCollisions(this, below)) {
          dummyMotionY = shape.collide(Direction.Axis.Y, box, dummyMotionY);
       }
@@ -1579,7 +1619,9 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
          double savedZ1 = argMove.z;
          AABB axisalignedbb = JBCommonUtil.copyBB(this.getBoundingBox());
          this.shrinkBoundWidth();
-         List<VoxelShape> list = this.collectCollisions(this.getBoundingBox().inflate(savedX1, savedY1, savedZ1));
+         // 1.12.2 addCoord (func_72321_a) is directional; AABB#inflate is not and shrinks the
+         // search box for negative motion, which let the machine fall straight through the floor.
+         List<VoxelShape> list = this.collectCollisions(this.getBoundingBox().expandTowards(savedX1, savedY1, savedZ1));
          double argMoveX = savedX1;
          double argMoveY = savedY1;
          double argMoveZ = savedZ1;
@@ -1611,7 +1653,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
             AABB axisalignedbb1 = JBCommonUtil.copyBB(this.getBoundingBox());
             this.setBoundingBox(axisalignedbb);
             this.shrinkBoundWidth();
-            list = this.collectCollisions(this.getBoundingBox().inflate(savedX1, argMoveY, savedZ1));
+            list = this.collectCollisions(this.getBoundingBox().expandTowards(savedX1, argMoveY, savedZ1));
 
             for (int i = 0; i < list.size(); ++i) {
                argMoveY = list.get(i).collide(Direction.Axis.Y, this.getBoundingBox(), argMoveY);
@@ -1643,7 +1685,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
 
          this.level().getProfiler().pop();
          this.level().getProfiler().push("rest");
-         this.reapplyPosition();
+         this.resetPositionToBB();
          this.resetBoundWidth();
          this.horizontalCollision = savedX1 != argMoveX || savedZ1 != argMoveZ;
          this.verticalCollision = savedY1 != argMoveY;
@@ -1721,8 +1763,20 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
          this.level().getProfiler().pop();
       } else {
          JBCommonUtil.offsetBB(this.getBoundingBox(), argMove.x, argMove.y, argMove.z);
-         this.reapplyPosition();
+         this.resetPositionToBB();
       }
+   }
+
+   /**
+    * 1.12.2 {@code Entity#resetPositionToBB} (func_174829_m): the collision pass above only
+    * offsets the bounding box, so the position has to be derived from it afterwards. 1.20.1's
+    * {@code Entity#reapplyPosition} does the opposite - it rebuilds the box from the stored
+    * position - which left the machine pinned at its spawn position forever: deltaMovement
+    * accumulated, fallDistance grew without bound and onGround never became true.
+    */
+   private void resetPositionToBB() {
+      AABB bb = this.getBoundingBox();
+      this.setPosRaw((bb.minX + bb.maxX) / 2.0, bb.minY, (bb.minZ + bb.maxZ) / 2.0);
    }
 
    private void resetBoundWidth() {
@@ -2063,9 +2117,9 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
                   if (player != null && player.level() == this.level()) {
                      if ((double)player.distanceTo(entitySeat) < 24.0) {
                         player.startRiding(entitySeat);
-                        if (player instanceof ServerPlayer) {
-                           ((ServerPlayer)player).connection.send(new ClientboundSetPassengersPacket(this));
-                        }
+                        // 1.12.2 sent ClientboundSetPassengersPacket(this) (the parent) here, which
+                        // never carried the seat rider; the mod's seat packet does.
+                        JBPacketSender.sendSeatRideSyncToPlayers(this, entitySeat, player, true);
                      }
                      entitySeat.reRidePlayerUUID = null;
                   }
@@ -2092,6 +2146,12 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
          if (passenger != null && !this.level().isClientSide) {
             if (!entitySeat.canDetach) {
                passenger.setShiftKeyDown(false);
+            } else if (entitySeat.isRiddenbyPressingExKey(13)) {
+               // 1.20.1 dismounts through Player#rideTick, but the client stops sending
+               // PRESS_SHIFT_KEY once LocalPlayer#rideTick cleared its input state, so the server
+               // player never sees the sneak. Mirror the sneak the rider sent with the mod's own
+               // packet back onto the player and let the vanilla dismount run.
+               passenger.setShiftKeyDown(true);
             }
 
             // 1.12 called Entity#updateRidden (func_70098_U); 1.20 has no counterpart - riders are
@@ -2103,6 +2163,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
             if (i == 0 && this.boardImmidiatePlayer != null && entitySeat.seatEnabled && !entitySeat.notAsSeat) {
                if ((double)entitySeat.distanceTo(this.boardImmidiatePlayer) <= 5.5) {
                   this.boardImmidiatePlayer.startRiding(entitySeat);
+                  JBPacketSender.sendSeatRideSyncToPlayers(this, entitySeat, this.boardImmidiatePlayer, true);
                }
                this.boardImmidiatePlayer = null;
             }
@@ -2159,7 +2220,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       }
       if (entityPlayer instanceof ServerPlayer) {
          ServerPlayer serverPlayer = (ServerPlayer)entityPlayer;
-         serverPlayer.connection.send(new ClientboundSetPassengersPacket(this));
+         JBPacketSender.sendSeatRideSyncToPlayers(this, seatPart, serverPlayer, false);
          serverPlayer.connection.teleport(entityPlayer.getX(), entityPlayer.getY(), entityPlayer.getZ(), entityPlayer.getYRot(), entityPlayer.getXRot());
       }
    }
