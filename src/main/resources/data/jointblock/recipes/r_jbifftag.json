@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RR",
+    "UU"
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "jointblock:jbifftag"
+  }
+}

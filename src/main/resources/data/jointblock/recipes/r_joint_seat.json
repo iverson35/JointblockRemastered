@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  N",
+    "E N",
+    "NNN"
+  ],
+  "key": {
+    "N": {
+      "item": "jointblock:joint_normal"
+    },
+    "E": {
+      "item": "jointblock:joint_extender"
+    }
+  },
+  "result": {
+    "item": "jointblock:joint_seat"
+  }
+}

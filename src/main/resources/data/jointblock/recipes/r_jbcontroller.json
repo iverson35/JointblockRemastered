@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FRF",
+    "FFF",
+    " U "
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    },
+    "F": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:fishing_rod"
+    }
+  },
+  "result": {
+    "item": "jointblock:jbcontroller"
+  }
+}

@@ -1,6 +1,8 @@
 package jp.mc.ancientred.jointblock.block;
 
 import jp.mc.ancientred.jointblock.common.WorldHelper;
+import jp.mc.ancientred.jointblock.gui.JBGuiIds;
+import jp.mc.ancientred.jointblock.item.ItemRingProgram;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJointCore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
@@ -27,7 +29,8 @@ public class BlockJointCore extends BlockJointBase {
          return InteractionResult.SUCCESS;
       } else {
          if (!world.isClientSide) {
-            openJointGui(entityPlayer, world, bPos);
+            openJointGui(entityPlayer, world, bPos,
+                ItemRingProgram.isCurrentItemRing(entityPlayer) ? JBGuiIds.guiJointCoreFuelsFromBlockId : JBGuiIds.guiJointCoreId);
          }
 
          return InteractionResult.SUCCESS;

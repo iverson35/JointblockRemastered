@@ -21,7 +21,7 @@ public class JBPatternTriangle {
       double xt = v1Y * v2Z - v1Z * v2Y;
       double yt = v1Z * v2X - v1X * v2Z;
       double zt = v1X * v2Y - v1Y * v2X;
-      double mgn = (double)Mth.sqrt(xt * xt + yt * yt + zt * zt);
+      double mgn = (double)Mth.sqrt((float)(xt * xt + yt * yt + zt * zt));
       if (mgn == 0.0) {
          this.enabled = false;
       } else {

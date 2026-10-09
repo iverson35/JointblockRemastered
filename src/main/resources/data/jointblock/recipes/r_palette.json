@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CCC",
+    "HHH"
+  ],
+  "key": {
+    "H": {
+      "tag": "minecraft:wooden_slabs"
+    },
+    "C": {
+      "type": "forge:nbt",
+      "item": "jointblock:ceramicputty",
+      "nbt": "{subtype:0}"
+    }
+  },
+  "result": {
+    "item": "jointblock:jbcopytool",
+    "nbt": "{subtype:0}"
+  }
+}

@@ -481,7 +481,7 @@ public class JBCarvingDataUtil {
          baseFacing = 3;
       }
 
-      int facingTwdPlayer = JBRotationUtil.rotateSideOrFacingBasedOnBaseFacing(baseFacing, facingTwdPlayer);
+      facingTwdPlayer = JBRotationUtil.rotateSideOrFacingBasedOnBaseFacing(baseFacing, facingTwdPlayer);
       return facingTwdPlayer;
    }
 
@@ -702,18 +702,18 @@ public class JBCarvingDataUtil {
       int x;
       int boxIndex;
       for(usedPatternsCnt = 0; usedPatternsCnt < carvingDiv; ++usedPatternsCnt) {
-         int yCalc = divCountPow * usedPatternsCnt;
+         yCalc = divCountPow * usedPatternsCnt;
 
-         for(int z = 0; z < carvingDiv; ++z) {
-            y = yCalc + carvingDiv * z;
+         for(z = 0; z < carvingDiv; ++z) {
+            yPzCalc = yCalc + carvingDiv * z;
 
-            for(yCalc = 0; yCalc < carvingDiv; ++yCalc) {
-               z = yCalc + y;
-               yPzCalc = carvingData[z >> 2] >>> ((z & 3) << 3) & 255;
-               x = yPzCalc & 112;
-               boxIndex = yPzCalc & 15;
-               if (x != 0) {
-                  patternUsed |= 1 << boxIndex;
+            for(x = 0; x < carvingDiv; ++x) {
+               boxIndex = x + yPzCalc;
+               int dat = carvingData[boxIndex >> 2] >>> ((boxIndex & 3) << 3) & 255;
+               int col = dat & 112;
+               int pat = dat & 15;
+               if (col != 0) {
+                  patternUsed |= 1 << pat;
                }
             }
          }

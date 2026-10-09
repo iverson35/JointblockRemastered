@@ -1,5 +1,6 @@
 package jp.mc.ancientred.jointblock.carving.pattern;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;
 import jp.mc.ancientred.jointblock.carving.CarvingRayTraceResult;
 import jp.mc.ancientred.jointblock.carving.JBCarvingClientUtil;
@@ -10,6 +11,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Matrix4f;
 
 public abstract class AbstractSidedPattern extends JBCarvingPattern {
    protected static final double BOX_SIZE = 2.0;
@@ -227,6 +229,30 @@ public abstract class AbstractSidedPattern extends JBCarvingPattern {
    }
 
    @OnlyIn(Dist.CLIENT)
+   public void drawPattern(VertexConsumer consumer, Matrix4f matrix, double minX, double minY, double minZ, double unit, int rotSideFace, int patternArgs, int color) {
+      if (patternArgs <= this.maxPatternArgs) {
+         double unitDiv = unit / 4.0;
+         JBPatternTriangle[] coords = this.sideFaceTrianglesOfArgs[patternArgs][rotSideFace];
+         int i = 0;
+
+         for(int len = coords.length; i < len; ++i) {
+            JBPatternTriangle tris = coords[i];
+            if (tris.enabled) {
+               // 1.12.2 drew the pattern triangles with GL lighting on: shade by their own normal.
+               int shaded = JBCarvingClientUtil.shade(color, JBCarvingClientUtil.faceLight(tris.normalX, tris.normalY, tris.normalZ));
+               int cb = shaded >> 16 & 255;
+               int cg = shaded >> 8 & 255;
+               int cr = shaded & 255;
+               consumer.vertex(matrix, (float)(minX + tris.vertA.x * unitDiv), (float)(minY + tris.vertA.y * unitDiv), (float)(minZ + tris.vertA.z * unitDiv)).color(cr, cg, cb, 255).normal(tris.normalX, tris.normalY, tris.normalZ).endVertex();
+               consumer.vertex(matrix, (float)(minX + tris.vertB.x * unitDiv), (float)(minY + tris.vertB.y * unitDiv), (float)(minZ + tris.vertB.z * unitDiv)).color(cr, cg, cb, 255).normal(tris.normalX, tris.normalY, tris.normalZ).endVertex();
+               consumer.vertex(matrix, (float)(minX + tris.vertC.x * unitDiv), (float)(minY + tris.vertC.y * unitDiv), (float)(minZ + tris.vertC.z * unitDiv)).color(cr, cg, cb, 255).normal(tris.normalX, tris.normalY, tris.normalZ).endVertex();
+            }
+         }
+
+      }
+   }
+
+   @OnlyIn(Dist.CLIENT)
    public void rayTraceSubBounds(CarvingRayTraceResult baseTraceResult, Vec3 vecPos, Vec3 velLookRay, int hitType, double unit, int rotSideFace, AABB aabbWork) {
       double unitDiv = unit / 4.0;
       PatternArgsBBSet[] subBoundsSetsAry = this.sideFaceSubBounds[rotSideFace];
@@ -244,12 +270,12 @@ public abstract class AbstractSidedPattern extends JBCarvingPattern {
                JBCommonUtil.copyBBTo(subBound, aabbWork);
                JBCommonUtil.multBB(aabbWork, unitDiv);
                JBCommonUtil.offsetBB(aabbWork, minX, minY, minZ);
-               Vec3 vec32 = vecPos.getIntermediateWithXValue(velLookRay, aabbWork.minX);
-               Vec3 vec33 = vecPos.getIntermediateWithXValue(velLookRay, aabbWork.maxX);
-               Vec3 vec34 = vecPos.getIntermediateWithYValue(velLookRay, aabbWork.minY);
-               Vec3 vec35 = vecPos.getIntermediateWithYValue(velLookRay, aabbWork.maxY);
-               Vec3 vec36 = vecPos.getIntermediateWithZValue(velLookRay, aabbWork.minZ);
-               Vec3 vec37 = vecPos.getIntermediateWithZValue(velLookRay, aabbWork.maxZ);
+               Vec3 vec32 = JBCarvingClientUtil.getIntermediateWithXValue(vecPos, velLookRay, aabbWork.minX);
+               Vec3 vec33 = JBCarvingClientUtil.getIntermediateWithXValue(vecPos, velLookRay, aabbWork.maxX);
+               Vec3 vec34 = JBCarvingClientUtil.getIntermediateWithYValue(vecPos, velLookRay, aabbWork.minY);
+               Vec3 vec35 = JBCarvingClientUtil.getIntermediateWithYValue(vecPos, velLookRay, aabbWork.maxY);
+               Vec3 vec36 = JBCarvingClientUtil.getIntermediateWithZValue(vecPos, velLookRay, aabbWork.minZ);
+               Vec3 vec37 = JBCarvingClientUtil.getIntermediateWithZValue(vecPos, velLookRay, aabbWork.maxZ);
                if (!JBCarvingClientUtil.isVecInsideYZBounds(aabbWork, vec32)) {
                   vec32 = null;
                }
@@ -275,27 +301,27 @@ public abstract class AbstractSidedPattern extends JBCarvingPattern {
                }
 
                Vec3 vec38 = null;
-               if (vec32 != null && (vec38 == null || vecPos.squareDistanceTo(vec32) < vecPos.squareDistanceTo(vec38))) {
+               if (vec32 != null && (vec38 == null || vecPos.distanceToSqr(vec32) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec32;
                }
 
-               if (vec33 != null && (vec38 == null || vecPos.squareDistanceTo(vec33) < vecPos.squareDistanceTo(vec38))) {
+               if (vec33 != null && (vec38 == null || vecPos.distanceToSqr(vec33) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec33;
                }
 
-               if (vec34 != null && (vec38 == null || vecPos.squareDistanceTo(vec34) < vecPos.squareDistanceTo(vec38))) {
+               if (vec34 != null && (vec38 == null || vecPos.distanceToSqr(vec34) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec34;
                }
 
-               if (vec35 != null && (vec38 == null || vecPos.squareDistanceTo(vec35) < vecPos.squareDistanceTo(vec38))) {
+               if (vec35 != null && (vec38 == null || vecPos.distanceToSqr(vec35) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec35;
                }
 
-               if (vec36 != null && (vec38 == null || vecPos.squareDistanceTo(vec36) < vecPos.squareDistanceTo(vec38))) {
+               if (vec36 != null && (vec38 == null || vecPos.distanceToSqr(vec36) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec36;
                }
 
-               if (vec37 != null && (vec38 == null || vecPos.squareDistanceTo(vec37) < vecPos.squareDistanceTo(vec38))) {
+               if (vec37 != null && (vec38 == null || vecPos.distanceToSqr(vec37) < vecPos.distanceToSqr(vec38))) {
                   vec38 = vec37;
                }
 

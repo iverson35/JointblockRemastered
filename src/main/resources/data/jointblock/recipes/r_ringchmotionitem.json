@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "jointblock:unitparts"
+    },
+    {
+      "item": "jointblock:machinemotionitem"
+    }
+  ],
+  "result": {
+    "item": "jointblock:ringchmotionitem"
+  }
+}

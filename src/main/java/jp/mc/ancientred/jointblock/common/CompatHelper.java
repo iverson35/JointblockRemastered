@@ -1,6 +1,8 @@
 package jp.mc.ancientred.jointblock.common;
 
 import java.util.List;
+import jp.mc.ancientred.jointblock.JBModContainer;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,5 +38,9 @@ public class CompatHelper {
 
    public static boolean isStackEmptyOrNull(ItemStack target) {
       return target == null || target.isEmpty();
+   }
+
+   public static String formatLang(String translateKey, Object... parameters) {
+      return StringUtil.isNullOrEmpty(translateKey) ? "" : JBModContainer.proxy.formatLang(translateKey, parameters);
    }
 }

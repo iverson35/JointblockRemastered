@@ -1,5 +1,6 @@
 package jp.mc.ancientred.jointblock.carving.pattern;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;
 import jp.mc.ancientred.jointblock.carving.CarvingRayTraceResult;
 import jp.mc.ancientred.jointblock.carving.prebuild.Prebuilder;
@@ -7,6 +8,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Matrix4f;
 
 public abstract class JBCarvingPattern {
    protected static final int BBCOLOR_BASE = -16776961;
@@ -152,6 +154,19 @@ public abstract class JBCarvingPattern {
 
    @OnlyIn(Dist.CLIENT)
    public abstract void prebuildPattern(Prebuilder var1, double var2, double var4, double var6, double var8, int var10, int var11);
+
+   /**
+    * Emits the carve-render triangles of this pattern for one palette colour.
+    *
+    * <p>1.12.2 sibling of {@link #prebuildPattern}: the same triangle list, written into a
+    * {@code BufferBuilder} instead of a {@code Prebuilder}. The 1.12.2 fixed-function draw
+    * ({@code GlStateManager.bindTexture(whiteResTexId)} plus {@code Tessellator} in
+    * {@code GL_TRIANGLES}) has no 1.20.1 equivalent, so it becomes a {@link VertexConsumer} emit;
+    * the caller supplies the {@link Matrix4f} and the {@code RenderType} carries the texture and
+    * light state.
+    */
+   @OnlyIn(Dist.CLIENT)
+   public abstract void drawPattern(VertexConsumer consumer, Matrix4f matrix, double minX, double minY, double minZ, double unit, int rotSideFace, int patternArgs, int color);
 
    @OnlyIn(Dist.CLIENT)
    public abstract void rayTraceSubBounds(CarvingRayTraceResult var1, Vec3 var2, Vec3 var3, int var4, double var5, int var7, AABB var8);

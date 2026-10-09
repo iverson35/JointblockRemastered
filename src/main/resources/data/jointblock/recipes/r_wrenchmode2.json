@@ -1,0 +1,12 @@
+{
+  "type": "jointblock:subtype_conversion",
+  "category": "misc",
+  "input": {
+    "item": "jointblock:turnwrench",
+    "subtype": 2
+  },
+  "result": {
+    "item": "jointblock:turnwrench",
+    "subtype": 1
+  }
+}

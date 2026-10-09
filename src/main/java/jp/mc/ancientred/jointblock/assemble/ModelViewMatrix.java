@@ -508,18 +508,12 @@ public class ModelViewMatrix extends MatrixBase implements IJBVectorTransformer 
    }
 
    public void setupRayVec() {
-      Vec3 var10000 = this.rayBecSt;
-      var10000.x -= this.baseEntityPosX;
-      var10000 = this.rayBecSt;
-      var10000.y -= this.baseEntityPosY;
-      var10000 = this.rayBecSt;
-      var10000.z -= this.baseEntityPosZ;
-      var10000 = this.rayBecEd;
-      var10000.x -= this.baseEntityPosX;
-      var10000 = this.rayBecEd;
-      var10000.y -= this.baseEntityPosY;
-      var10000 = this.rayBecEd;
-      var10000.z -= this.baseEntityPosZ;
+      this.rayBecSt.x -= this.baseEntityPosX;
+      this.rayBecSt.y -= this.baseEntityPosY;
+      this.rayBecSt.z -= this.baseEntityPosZ;
+      this.rayBecEd.x -= this.baseEntityPosX;
+      this.rayBecEd.y -= this.baseEntityPosY;
+      this.rayBecEd.z -= this.baseEntityPosZ;
    }
 
    public void setToQuat(Quaternion quat) {

@@ -1,12 +1,14 @@
 package jp.mc.ancientred.jointblock.block;
 
 import java.util.Random;
+import jp.mc.ancientred.jointblock.JBModContainer;
 import jp.mc.ancientred.jointblock.api.IJBModelItem;
 import jp.mc.ancientred.jointblock.carving.JBCarvingDataUtil;
 import jp.mc.ancientred.jointblock.common.CompatHelper;
 import jp.mc.ancientred.jointblock.common.JBCommonUtil;
 import jp.mc.ancientred.jointblock.common.JBRotationUtil;
 import jp.mc.ancientred.jointblock.common.WorldHelper;
+import jp.mc.ancientred.jointblock.gui.JBGuiIds;
 import jp.mc.ancientred.jointblock.item.ICeramicModItem;
 import jp.mc.ancientred.jointblock.item.ItemJBIFFTag;
 import jp.mc.ancientred.jointblock.item.ItemJBMirrorTool;
@@ -15,12 +17,11 @@ import jp.mc.ancientred.jointblock.tileentity.TileEntityJoint;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJointCore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -46,8 +47,6 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.SpawnPlacements;
-import net.minecraftforge.network.NetworkHooks;
 
 public abstract class BlockJointBase extends BaseEntityBlock {
    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -111,9 +110,12 @@ public abstract class BlockJointBase extends BaseEntityBlock {
    }
 
    protected static void openJointGui(Player entityPlayer, Level level, BlockPos bPos) {
-      if (entityPlayer instanceof ServerPlayer serverPlayer && level.getBlockEntity(bPos) instanceof MenuProvider provider) {
-         NetworkHooks.openScreen(serverPlayer, provider, bPos);
-      }
+      openJointGui(entityPlayer, level, bPos, JBGuiIds.guiJointBlockId);
+   }
+
+   /** 1.12.2 {@code EntityPlayer#openGui(mod, intGuiId, world, x, y, z)}; see {@link JBGuiOpener}. */
+   protected static void openJointGui(Player entityPlayer, Level level, BlockPos bPos, int guiId) {
+      JBModContainer.proxy.openGui(guiId, entityPlayer, level, bPos);
    }
 
    protected boolean isPlayerHoldingInteractiveItem(Level world, BlockPos bPos, BlockState state, Player entityPlayer, Direction side) {
@@ -193,7 +195,7 @@ public abstract class BlockJointBase extends BaseEntityBlock {
          }
 
          if (item instanceof ItemJBMirrorTool) {
-            openJointGui(entityPlayer, world, bPos);
+            JBModContainer.proxy.openGui(JBGuiIds.guiMirrorBuildId, entityPlayer, world, bPos);
             return true;
          }
       }

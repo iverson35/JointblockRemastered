@@ -25,17 +25,10 @@ logs
 # 1.12.2 reference material: the decompiled mod, its assets and the MCP/source extracts used while
 # porting. Kept on disk, never committed.
 /referance/
-.refsrc/
 
-# local throwaway compile/test scaffolding (not part of the build)
-.jbargs
-.jbcp
-.jblibs/
-.jbout/
-.jbcheck.sh
-.cp_jars.txt
-.cp_win.txt
-c*.log
+# Local throwaway scratch (porting logs, javac/javap scaffolding, jar caches, probes, extracted
+# SRG sources). Everything of that kind lives under debug/ and is never committed.
+/debug/
 
 # Files from Forge MDK
 forge*changelog.txt

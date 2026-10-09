@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "r_joint_normal",
+  "pattern": [
+    "DSD",
+    "SFS",
+    "TBT"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stone"
+    },
+    "B": {
+      "item": "minecraft:slime_ball"
+    },
+    "T": {
+      "item": "minecraft:redstone_torch"
+    },
+    "D": {
+      "item": "minecraft:ink_sac"
+    }
+  },
+  "result": {
+    "item": "jointblock:joint_normal",
+    "count": 3
+  }
+}

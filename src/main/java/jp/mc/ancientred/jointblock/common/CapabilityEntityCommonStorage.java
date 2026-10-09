@@ -14,7 +14,7 @@ public class CapabilityEntityCommonStorage {
    // 1.20.1: @CapabilityInject/CapabilityManager.register are gone; the token below is the
    // RegisterCapabilitiesEvent-compatible equivalent (register via RegisterCapabilitiesEvent#register).
    public static final Capability<IEntitCommonStorage> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
-   public static final ResourceLocation EXTENDED_PROPERTY_CSTOREAGE_HOLDER = new ResourceLocation("modj_jointblock:capability_ecsc");
+   public static final ResourceLocation EXTENDED_PROPERTY_CSTOREAGE_HOLDER = new ResourceLocation("jointblock:capability_ecsc");
 
    public static class EntitCommonStorageImpl implements IEntitCommonStorage, ICapabilityProvider {
       public int targetSightTick = 0;

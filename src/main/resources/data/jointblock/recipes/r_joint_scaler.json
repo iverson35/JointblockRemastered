@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "E E",
+    "   ",
+    "E E"
+  ],
+  "key": {
+    "E": {
+      "item": "jointblock:joint_extender"
+    }
+  },
+  "result": {
+    "item": "jointblock:joint_scaler"
+  }
+}

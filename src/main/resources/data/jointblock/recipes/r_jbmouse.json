@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BB",
+    "UU"
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    },
+    "B": {
+      "tag": "minecraft:wooden_buttons"
+    }
+  },
+  "result": {
+    "item": "jointblock:jbmouse"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "jointblock:joint_normal"
+  },
+  "result": {
+    "item": "jointblock:ceramicputty",
+    "count": 6,
+    "nbt": "{subtype:0}"
+  },
+  "experience": 0.3,
+  "cookingtime": 200
+}

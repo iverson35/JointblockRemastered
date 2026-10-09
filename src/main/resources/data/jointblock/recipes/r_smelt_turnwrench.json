@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "jointblock:turnwrench"
+  },
+  "result": {
+    "item": "jointblock:ceramicchisel"
+  },
+  "experience": 0.3,
+  "cookingtime": 200
+}

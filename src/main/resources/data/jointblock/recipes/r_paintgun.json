@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " P ",
+    "FFF",
+    "  F"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "type": "forge:nbt",
+      "item": "jointblock:jbcopytool",
+      "nbt": "{subtype:0}"
+    }
+  },
+  "result": {
+    "item": "jointblock:paintgun"
+  }
+}

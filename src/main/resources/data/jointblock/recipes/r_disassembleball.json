@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "UU",
+    "UU"
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    }
+  },
+  "result": {
+    "item": "jointblock:disassembleball"
+  }
+}

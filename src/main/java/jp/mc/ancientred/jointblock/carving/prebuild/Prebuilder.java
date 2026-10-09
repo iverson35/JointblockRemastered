@@ -609,14 +609,14 @@ public class Prebuilder extends MatrixBase {
          }
       });
       int v = 0;
+      int vertCnt = this.vertices.size();
 
       PbCarvingCell.PbCellVert vert;
-      int v;
       int v2;
-      for(v = this.vertices.size(); v < v; ++v) {
+      for(v = 0; v < vertCnt; ++v) {
          if ((vert = (PbCarvingCell.PbCellVert)this.vertices.get(v)).vertIdx_and_flg >= 0) {
             label134:
-            for(v2 = v + 1; v2 < v; ++v2) {
+            for(v2 = v + 1; v2 < vertCnt; ++v2) {
                PbCarvingCell.PbCellVert vertOther;
                if ((vertOther = (PbCarvingCell.PbCellVert)this.vertices.get(v2)).vertIdx_and_flg >= 0) {
                   if (vertOther.ts - vert.ts > MERGE_DIST_3X) {
@@ -760,9 +760,8 @@ public class Prebuilder extends MatrixBase {
                nf = 0;
                Queue<PbCarvingCell.PbCellFace[]> edgeQueue = new LinkedList();
                int e = 0;
-
-               int e;
-               for(e = edgeListForGroup.size(); e < e; ++e) {
+               int edgeCnt = edgeListForGroup.size();
+               for(e = 0; e < edgeCnt; ++e) {
                   PbCarvingCell.PbCellEdge edge = (PbCarvingCell.PbCellEdge)edgeListForGroup.get(e);
                   Iterator var15 = edge.holderFaces.iterator();
 
@@ -1419,9 +1418,8 @@ public class Prebuilder extends MatrixBase {
                                     oneOfEdgeJoinedRight = true;
                                  }
                               } else {
-                                 PbCarvingCell.PbCellVertWrapper vertCP;
                                  if (isLeftNearEqualLine) {
-                                    vertCP = new PbCarvingCell.PbCellVertWrapper(leftVert);
+                                    PbCarvingCell.PbCellVertWrapper vertCP = new PbCarvingCell.PbCellVertWrapper(leftVert);
                                     if (leftVert == vertNow) {
                                        rightFaceEdgeListLocal.add(vertCP.connectFromBack = new SplittedEdge(vertCP, rightVert));
                                        vertCP.twardsLeft = false;
@@ -1432,7 +1430,7 @@ public class Prebuilder extends MatrixBase {
 
                                     vertCP.isTurningPoint = true;
                                  } else if (isRightNearEqualLine) {
-                                    vertCP = new PbCarvingCell.PbCellVertWrapper(rightVert);
+                                    PbCarvingCell.PbCellVertWrapper vertCP = new PbCarvingCell.PbCellVertWrapper(rightVert);
                                     if (rightVert == vertNow) {
                                        leftFaceEdgeListLocal.add(vertCP.connectFromBack = new SplittedEdge(vertCP, leftVert));
                                        vertCP.twardsLeft = true;
