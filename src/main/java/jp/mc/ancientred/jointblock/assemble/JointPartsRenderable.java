@@ -227,6 +227,14 @@ public class JointPartsRenderable extends JointParts {
             }
          }
       } else if (target.jointType == 10) {
+         // 1.12.2 keeps two triples here: the part's scale (1.0F defaults, replaced on the
+         // extension axis) and the child-frame push (0.0F defaults, written by the renderOffset
+         // fixups). The decompiled source merged both into extendRateX/Y/Z, so the push used the
+         // scale values and moved the child frame a full block on both axes normal to the
+         // extension whenever the child sits straight on the extension axis.
+         float pushX = 0.0F;
+         float pushY = 0.0F;
+         float pushZ = 0.0F;
          float extendRateX = 1.0F;
          float extendRateY = 1.0F;
          float extendRateZ = 1.0F;
@@ -250,31 +258,31 @@ public class JointPartsRenderable extends JointParts {
          if (target.renderOffsetX < 0.0F) {
             fix = (1.0F - extendRateX) / 2.0F;
             preOffsetX = target.renderOffsetX + fix;
-            extendRateX = fix;
+            pushX = fix;
          } else if (target.renderOffsetX > 0.0F) {
             fix = (1.0F - extendRateX) / 2.0F;
             preOffsetX = target.renderOffsetX - fix;
-            extendRateX = -fix;
+            pushX = -fix;
          }
 
          float renderOffsetYShift = 0.5F * extendRateY - 0.5F + (fix = (1.0F * extendRateY - 1.0F) / 2.0F);
          preOffsetY += renderOffsetYShift;
          if (target.renderOffsetY < 0.0F) {
             preOffsetY = target.renderOffsetY + renderOffsetYShift - fix;
-            extendRateY = -renderOffsetYShift - fix;
+            pushY = -renderOffsetYShift - fix;
          } else if (target.renderOffsetY > 0.0F) {
             preOffsetY = target.renderOffsetY + renderOffsetYShift + fix;
-            extendRateY = -renderOffsetYShift + fix;
+            pushY = -renderOffsetYShift + fix;
          }
 
          if (target.renderOffsetZ < 0.0F) {
             fix = (1.0F - extendRateZ) / 2.0F;
             preOffsetZ = target.renderOffsetZ + fix;
-            extendRateZ = fix;
+            pushZ = fix;
          } else if (target.renderOffsetZ > 0.0F) {
             fix = (1.0F - extendRateZ) / 2.0F;
             preOffsetZ = target.renderOffsetZ - fix;
-            extendRateZ = -fix;
+            pushZ = -fix;
          }
 
          if (StaticClientTuningStates.targetSelected.isSetectionEnabled
@@ -291,7 +299,7 @@ public class JointPartsRenderable extends JointParts {
             matrix.tempPopMatrix();
          }
 
-         matrix.translate(extendRateX, -extendRateY, -extendRateZ);
+         matrix.translate(pushX, -pushY, -pushZ);
       } else if (target.jointType == 12) {
          float extendRateX = 1.0F;
          float extendRateY = 1.0F;
