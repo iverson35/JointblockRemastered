@@ -484,14 +484,14 @@ public class JointParts implements IJBJointParameterHolder.IJBJoint, IJBJointPar
                }
             }
          } else if (target.jointType == 10) {
-            // 1.12.2 keeps two triples here: the part's scale (1.0F defaults, replaced on the
-            // extension axis) and the child-frame push (0.0F defaults, written by the renderOffset
-            // fixups). The decompiled source merged both into extendRateX/Y/Z, so the push used the
-            // scale values and moved the child frame a full block on both axes normal to the
-            // extension whenever the child sits straight on the extension axis.
-            float pushX = 0.0F;
-            float pushY = 0.0F;
-            float pushZ = 0.0F;
+            // 1.12.2 keeps two triples here: the part's scale (extendRateX/Y/Z, 1.0F defaults,
+            // replaced on the extension axis) and the child frame's offset after the extension
+            // (afterOffsetX/Y/Z, 0.0F defaults, written by the renderOffset fixups). The decompiled
+            // source rendered both with the same names, so the child frame was translated by the
+            // scale values and moved a full block on both axes normal to the extension.
+            float afterOffsetX = 0.0F;
+            float afterOffsetY = 0.0F;
+            float afterOffsetZ = 0.0F;
             float extendRateX = 1.0F;
             float extendRateY = 1.0F;
             float extendRateZ = 1.0F;
@@ -513,31 +513,31 @@ public class JointParts implements IJBJointParameterHolder.IJBJoint, IJBJointPar
             if (target.renderOffsetX < 0.0F) {
                fix = (1.0F - extendRateX) / 2.0F;
                preOffsetX = target.renderOffsetX + fix;
-               pushX = fix;
+               afterOffsetX = fix;
             } else if (target.renderOffsetX > 0.0F) {
                fix = (1.0F - extendRateX) / 2.0F;
                preOffsetX = target.renderOffsetX - fix;
-               pushX = -fix;
+               afterOffsetX = -fix;
             }
 
             float renderOffsetYShift = 0.5F * extendRateY - 0.5F + (fix = (1.0F * extendRateY - 1.0F) / 2.0F);
             preOffsetY += renderOffsetYShift;
             if (target.renderOffsetY < 0.0F) {
                preOffsetY = target.renderOffsetY + renderOffsetYShift - fix;
-               pushY = -renderOffsetYShift - fix;
+               afterOffsetY = -renderOffsetYShift - fix;
             } else if (target.renderOffsetY > 0.0F) {
                preOffsetY = target.renderOffsetY + renderOffsetYShift + fix;
-               pushY = -renderOffsetYShift + fix;
+               afterOffsetY = -renderOffsetYShift + fix;
             }
 
             if (target.renderOffsetZ < 0.0F) {
                fix = (1.0F - extendRateZ) / 2.0F;
                preOffsetZ = target.renderOffsetZ + fix;
-               pushZ = fix;
+               afterOffsetZ = fix;
             } else if (target.renderOffsetZ > 0.0F) {
                fix = (1.0F - extendRateZ) / 2.0F;
                preOffsetZ = target.renderOffsetZ - fix;
-               pushZ = -fix;
+               afterOffsetZ = -fix;
             }
 
             if (isRemote) {
@@ -557,7 +557,7 @@ public class JointParts implements IJBJointParameterHolder.IJBJoint, IJBJointPar
                matrix.tempPopMatrix();
             }
 
-            matrix.translate(pushX, -pushY, -pushZ);
+            matrix.translate(afterOffsetX, -afterOffsetY, -afterOffsetZ);
          } else if (target.jointType == 12) {
             float extendRateX = 1.0F;
             float extendRateY = 1.0F;
