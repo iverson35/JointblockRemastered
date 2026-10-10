@@ -28,20 +28,20 @@ import net.minecraft.world.phys.Vec3;
  * Port of the 1.12.2 {@code JBPacketHandlerClient}.
  *
  * <p>{@code FMLNetworkEvent.ClientCustomPacketEvent} does not exist in 1.20.1; the raw
- * payload is handed over by {@link JBClientPacketInboudHandler} on the network thread.
- * The 1.12.2 thread contract is kept: the first five packet types are handled on the
- * calling (network) thread, everything else is re-dispatched onto the client thread
- * ({@code Minecraft.isCallingFromMinecraftThread()} → {@code Minecraft.isSameThread()},
- * {@code Minecraft.addScheduledTask()} → {@code Minecraft.execute(Runnable)}).
+ * payload is handed over by {@link JBClientPacketInboudHandler}. Every packet type is
+ * handled inline on the client thread: {@link JBNetwork} registers the channel handler
+ * with {@code consumerMainThread}, which is what 1.12.2 achieved with
+ * {@code Minecraft.isCallingFromMinecraftThread()} / {@code addScheduledTask()}.
+ *
+ * <p>1.12.2 ran the first five packet types on the network thread and only re-dispatched
+ * the rest; that is not survivable in 1.20.1, because the joint/explosion updates touch
+ * {@code ClientLevel} (entity storage and {@code level.random}) and 1.20.1 guards those
+ * against concurrent access ({@code ThreadingDetector} → "Accessing LegacyRandomSource
+ * from multiple threads").
  */
 public class JBPacketHandlerClient {
 
-   /** 1.12.2 {@code onClientPacket(FMLNetworkEvent.ClientCustomPacketEvent)}. */
-   public static void handleClientPacket(JBNetwork.Payload message) {
-      switchByPacketType(message, false);
-   }
-
-   public static boolean switchByPacketType(JBNetwork.Payload packet, boolean intercepted) {
+   public static boolean switchByPacketType(JBNetwork.Payload packet) {
       FriendlyByteBuf data = packet.payload();
       byte packetType = -1;
 
@@ -69,17 +69,6 @@ public class JBPacketHandlerClient {
 
          if (packetType == JBNetwork.PACKET_TYPE_DUMMY_EXPLODE) {
             receiveDummyExplosion(data);
-            return true;
-         }
-
-         Minecraft client = Minecraft.getInstance();
-         if (!client.isSameThread()) {
-            client.execute(() -> {
-               // 1.12.2 reset the reader index of the shared payload buffer here; the
-               // Payload wrapper hands out a fresh buffer positioned at 0, so the
-               // re-dispatch reads the packet type again on its own.
-               switchByPacketType(packet, false);
-            });
             return true;
          }
 

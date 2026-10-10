@@ -27,9 +27,12 @@ import net.minecraftforge.server.ServerLifecycleHooks;
  * {@link JBModContainer} and re-exposed here for the packet layer.
  *
  * <p>{@link #register()} is called from the mod constructor; it registers the message
- * and publishes the channel as {@code JBModContainer.channel}. Dispatch keeps the
- * 1.12.2 threading: the handler runs on the network thread and the existing
- * server/client switch methods marshal to the game thread themselves.
+ * and publishes the channel as {@code JBModContainer.channel}. The handler is registered
+ * with {@code consumerMainThread}, so both the server and the client switch methods run
+ * on their game thread - the 1.12.2 contract, where each side marshalled the payload
+ * itself, cannot be kept: 1.20.1 guards {@code Level} (including {@code level.random})
+ * against concurrent access and crashes the game when a packet handler touches it from
+ * the network thread.
  */
 public final class JBNetwork {
 
@@ -97,7 +100,7 @@ public final class JBNetwork {
         CHANNEL.messageBuilder(Payload.class, MSG_PAYLOAD)
             .encoder(Payload::encode)
             .decoder(Payload::decode)
-            .consumerNetworkThread(JBNetwork::handle)
+            .consumerMainThread(JBNetwork::handle)
             .add();
         JBModContainer.channel = CHANNEL;
     }

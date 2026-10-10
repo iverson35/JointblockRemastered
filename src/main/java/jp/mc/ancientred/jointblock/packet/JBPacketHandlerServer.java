@@ -31,7 +31,6 @@ import jp.mc.ancientred.jointblock.tileentity.TileEntityJointCore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -42,10 +41,10 @@ import net.minecraft.world.phys.Vec3;
  * Port of the 1.12.2 {@code JBPacketHandlerServer}.
  *
  * <p>{@code FMLNetworkEvent.ServerCustomPacketEvent} does not exist in 1.20.1: the raw
- * payload arrives from {@link JBNetwork} on the network thread and
- * {@link #handleServerPacket} reproduces the 1.12.2 {@code onServerPacket} scheduling
- * ({@code WorldServer.isCallingFromMinecraftThread()} / {@code addScheduledTask()} →
- * {@code MinecraftServer.isSameThread()} / {@code execute(Runnable)}).
+ * payload arrives from {@link JBNetwork} through a {@code consumerMainThread} handler,
+ * so {@link #handleServerPacket} already runs on the server thread - 1.12.2 reached the
+ * same state with {@code WorldServer.isCallingFromMinecraftThread()} /
+ * {@code addScheduledTask()}.
  */
 public class JBPacketHandlerServer {
 
@@ -59,12 +58,7 @@ public class JBPacketHandlerServer {
       if (thePlayer == null) {
          return;
       }
-      ServerLevel serverWorld = thePlayer.serverLevel();
-      if (serverWorld.getServer().isSameThread()) {
-         switchByPacketType(message.payload(), thePlayer);
-      } else {
-         serverWorld.getServer().execute(() -> switchByPacketType(message.payload(), thePlayer));
-      }
+      switchByPacketType(message.payload(), thePlayer);
    }
 
    public static final void switchByPacketType(FriendlyByteBuf packet, ServerPlayer thePlayer) {
