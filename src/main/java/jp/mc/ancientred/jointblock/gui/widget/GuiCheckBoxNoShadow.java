@@ -12,21 +12,23 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- * 1.12.2 {@code GuiCheckBoxNoShadow} (Forge {@code GuiCheckBox}): sized like the 1.12
- * {@code GuiButton(id, x, y, text)} constructor (200x20) so the whole label area stays clickable.
+ * 1.12.2 {@code GuiCheckBoxNoShadow} (Forge {@code GuiCheckBox}): a bare 11x11 box, exactly the
+ * size the 1.12 widget had - {@code GuiCheckBox} passed {@code boxWidth}/{@code boxHeight} to
+ * {@code GuiButton}, not the 200x20 of the plain {@code GuiButton(id, x, y, text)} constructor.
+ * The label is drawn next to the box and is not part of the hit box, which is what the 1.12
+ * layouts assume: the mod places check boxes 15px apart vertically and 30px apart horizontally.
+ * <p>Using 200x20 made every check box swallow its neighbours (and the blank space around them),
+ * so a click landed on whichever widget had been added last.
  * <p>1.20.1 substitutions: Forge's {@code GuiUtils.drawContinuousTexturedBox} 11x11 box becomes
  * {@link GuiGraphics#blitNineSliced} of the same {@code textures/gui/widgets.png} sprite (0,46);
  * the 1.12 {@code func_73731_b} override drew the label without a shadow
  * ({@link GuiGraphics#drawString(Font, String, int, int, int, boolean)} with {@code false}) and the
  * {@code func_73732_a} override drew the checked "x" shadowed through
- * {@link GuiGraphics#drawCenteredString(Font, String, int, int, int)} only while enabled.  The glyph
- * keeps the 1.12 11x11 geometry; only the clickable widget is enlarged to 200x20.
+ * {@link GuiGraphics#drawCenteredString(Font, String, int, int, int)} only while enabled.
  */
 @OnlyIn(Dist.CLIENT)
 public class GuiCheckBoxNoShadow extends AbstractButton implements IJBGuiWidget {
-   private static final int DEFAULT_WIDTH = 200;
-   private static final int DEFAULT_HEIGHT = 20;
-   /** 1.12 Forge {@code GuiCheckBox.boxWidth} / box height. */
+   /** 1.12 Forge {@code GuiCheckBox.boxWidth} / box height - also the widget's hit box. */
    private static final int BOX_WIDTH = 11;
    private static final int BOX_HEIGHT = 11;
    public static final int DEFAULT_FG_COLOUR = 14737632;
@@ -61,7 +63,7 @@ public class GuiCheckBoxNoShadow extends AbstractButton implements IJBGuiWidget 
    }
 
    public GuiCheckBoxNoShadow(int id, int xPos, int yPos, Component displayString, boolean isChecked, int packedFCol, Consumer<IJBGuiWidget> onPress) {
-      super(xPos, yPos, DEFAULT_WIDTH, DEFAULT_HEIGHT, displayString);
+      super(xPos, yPos, BOX_WIDTH, BOX_HEIGHT, displayString);
       this.id = id;
       this.isChecked = isChecked;
       this.packedFGColour = packedFCol;
