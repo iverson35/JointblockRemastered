@@ -222,23 +222,23 @@ public class ClientEventhandler {
    }
 
    /**
-    * 1.12.2's server only warned when an attack packet named an entity it considered invalid
-    * ({@code NetHandlerPlayServer.processUseEntity}: "Player {} tried to attack an invalid
-    * entity"), so the packet {@code Minecraft.clickMouse} sends before the hand swing was harmless
-    * and {@code ItemJBMouse.onEntitySwing} could drive the seat from the swing alone. 1.20.1 turned
-    * the same warning into a kick: {@code ServerGamePacketListenerImpl$1.onAttack} calls
-    * {@code disconnect(Component.translatable("multiplayer.disconnect.invalid_entity_attacked"))}
-    * - shown as "试图攻击无效实体" - when the packet names an {@code ItemEntity}, an
-    * {@code ExperienceOrb}, an {@code AbstractArrow} or the player itself.
+    * 1.12.2's server handled an attack packet naming an entity it considered invalid in two ways:
+    * a self attack became a 0-damage hit ({@code NetHandlerPlayServer.processUseEntity}:
+    * {@code if (entityIn == this.playerEntity) { attackEntityFrom(causePlayerDamage(...), 0.0F); }})
+    * and anything else it rejected only warned. 1.20.1's {@code ServerGamePacketListenerImpl$1.onAttack}
+    * disconnects instead ({@code multiplayer.disconnect.invalid_entity_attacked}, shown as
+    * "试图攻击无效实体") when the packet names an {@code ItemEntity}, an {@code ExperienceOrb}, an
+    * {@code AbstractArrow} or the player itself.
     *
-    * <p>Vanilla never sends such a packet because none of those entities is pickable, but the
-    * unit's parts are: {@code EntitySeatPart extends PartEntity<EntityJointed>} and overrides
-    * {@code isPickable()} with {@code seatEnabled}, so the crosshair lands on a part whose entity id
-    * exists on the client only - the server resolves that id to whatever entity happens to own it,
-    * and the kick follows. Cancel the attack interaction before {@code MultiPlayerGameMode.attack}
-    * sends the packet, and keep the hand swing so the server still runs
-    * {@code ItemJBMouse.onEntitySwing} and records the click on the seat
-    * ({@code isRiddenbyUsedItemList}) exactly as 1.12.2 did.
+    * <p>While the player rides a unit, the seat camera swaps {@code Minecraft}'s camera entity for
+    * {@link EntityJBClientCamera} (see {@link #onClientRenderTick}). {@code GameRenderer.pick} casts
+    * its ray from - and excludes - the camera entity rather than the player, so the player's own
+    * bounding box is no longer skipped: the ray starts inside it, {@code AABB.clip} hits at distance
+    * zero and {@code Minecraft.startAttack} sends the player's own id as the attack target. Cancel
+    * that interaction (and any that targets a {@code PartEntity} or an {@link IIgnoreTarget}, whose
+    * entity ids exist on the client only) before {@code MultiPlayerGameMode.attack} sends the packet,
+    * and keep the hand swing so the server still runs {@code ItemJBMouse.onEntitySwing} and records
+    * the click on the seat ({@code isRiddenbyUsedItemList}) exactly as 1.12.2 did.
     */
    @SubscribeEvent
    public static void onInteractionKeyMappingTriggered(InputEvent.InteractionKeyMappingTriggered event) {
@@ -252,7 +252,11 @@ public class ClientEventhandler {
       }
 
       Entity hitEntity = mc.hitResult instanceof EntityHitResult hitResult ? hitResult.getEntity() : null;
-      if (!(hitEntity instanceof PartEntity<?>) && !(hitEntity instanceof IIgnoreTarget)) {
+      if (hitEntity == null) {
+         return;
+      }
+
+      if (hitEntity != mc.player && !(hitEntity instanceof PartEntity<?>) && !(hitEntity instanceof IIgnoreTarget)) {
          return;
       }
 
