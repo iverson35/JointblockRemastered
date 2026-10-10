@@ -32,9 +32,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * <p>Drawing substitutions:
  * <ul>
- *   <li>{@code drawTexturedModalRect(x,y,u,v,w,h)} (the 1.12 {@code zLevel = -90} textured quad of
- *       {@code modj_jointblock:textures/gui/guijointblock.png}, a 256x256 sheet) becomes
- *       {@link GuiGraphics#blit(ResourceLocation, int, int, int, int, int, int)}.</li>
+ *   <li>{@code drawTexturedModalRect(x,y,u,v,w,h)} (the 1.12 {@code zLevel = -90} textured quad,
+ *       sampling whatever texture was bound - {@code modj_jointblock:textures/gui/guijointblock.png}
+ *       for the indicator borders and {@code minecraft:textures/gui/icons.png} for the status bars)
+ *       becomes {@link GuiGraphics#blit(ResourceLocation, int, int, int, int, int, int)}.</li>
  *   <li>The window size that 1.12 read from {@code event.getResolution()} comes from the overlay's
  *       {@code screenWidth}/{@code screenHeight} (equivalently {@link GuiGraphics#guiWidth()} /
  *       {@link GuiGraphics#guiHeight()}).</li>
@@ -51,10 +52,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class OverlayRendeler {
    private static final ResourceLocation resource = ResourceLocation.tryBuild("jointblock", "textures/gui/guijointblock.png");
-   /** Unit status bars: translucent track, vanilla boss-bar red for health, mod palette blue for energy. */
-   private static final int BAR_BACKGROUND = 0x80000000;
-   private static final int BAR_HEALTH = 0xFFB92A00;
-   private static final int BAR_ENERGY = 0xFF6D6DEB;
+   /** The vanilla HUD sheet whose v=74..93 rows the 1.12 status bars sampled (see {@link #render}). */
+   private static final ResourceLocation ICONS = ResourceLocation.tryBuild("minecraft", "textures/gui/icons.png");
    private static final String[] PALETTE_CHARS = new String[]{"1", "2", "3", "4", "5", "6", "B"};
    /** 1.12 field: window centre offset applied to every indicator row. */
    public static int indicatorStringCenterPad = 0;
@@ -98,16 +97,23 @@ public class OverlayRendeler {
          int energylen = (int)(energyScale * (float)barWidth);
          // 1.12.2 drew these four quads with drawTexturedModalRect *without* binding a texture,
          // so they sampled whatever the vanilla HUD had bound last - minecraft:textures/gui/
-         // icons.png, whose v=74..93 rows held the boss-bar sprites (that is where the bar look
-         // came from). The port passed guijointblock.png to blit() instead, and that texture is
+         // icons.png, whose v=74..93 rows hold the two boss-bar sprites; that is where the bar look
+         // came from. The port passed guijointblock.png to blit() instead, and that texture is
          // opaque black in exactly this region, so both bars rendered black regardless of the
-         // values. Draw them explicitly with the vanilla boss-bar colours (bars.png) instead.
-         guiGraphics.fill(left, top, left + barWidth, top + 5, BAR_BACKGROUND);
-         guiGraphics.fill(left, top + 8, left + barWidth, top + 8 + 5, BAR_BACKGROUND);
+         // values. icons.png still carries the identical sprites in 1.20.1 (verified pixel for
+         // pixel against the 1.12.2 sheet), so blit the same rectangles the 1.12 code sampled.
+         // 1.12 guarded these quads with GlStateManager.color(1,1,1,1); the 1.20.1 equivalent is
+         // clearing the GuiGraphics tint, since the overlays drawn before this one (the boss bar
+         // among them) leave a non-white shader colour behind.
+         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+         guiGraphics.blit(ICONS, left, top, 10, 84, barWidth, 5);
+         guiGraphics.blit(ICONS, left, top + 8, 10, 74, barWidth, 5);
          if (healthlen > 0) {
-            guiGraphics.fill(left, top, left + healthlen, top + 5, BAR_HEALTH);
-            guiGraphics.fill(left, top + 8, left + energylen, top + 8 + 5, BAR_ENERGY);
+            guiGraphics.blit(ICONS, left, top, 10, 89, healthlen, 5);
+            guiGraphics.blit(ICONS, left, top + 8, 10, 79, energylen, 5);
          }
+
+         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
          int heightFix = 2 - font.lineHeight / 2;
          StringBuilder strBuf = new StringBuilder();
