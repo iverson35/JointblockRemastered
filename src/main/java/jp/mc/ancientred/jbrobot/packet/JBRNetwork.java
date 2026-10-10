@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 import jp.mc.ancientred.jbrobot.JBRobotMODContainer;
 import jp.mc.ancientred.jointblock.modelpack.ExtraPackage;
 import jp.mc.ancientred.jbrobot.gui.ContainerModelCatalog;
+import jp.mc.ancientred.jbrobot.gui.GuiModelCatalog;
+import jp.mc.ancientred.jbrobot.item.merchant.JBMerchantType;
 import jp.mc.ancientred.jointblock.modelpack.ExtraPackage;
 import jp.mc.ancientred.jbrobot.item.merchant.DefaultModelMerchantPackage;
 import jp.mc.ancientred.jbrobot.item.merchant.DummyModelMerchantPackage;
@@ -114,6 +116,14 @@ public final class JBRNetwork {
                     JBRobotMODContainer.syncedExPackageListClient.add(new DummyModelMerchantPackage());
                     lackList.add(entry.packageId);
                 }
+            }
+
+            if (!entries.isEmpty()) {
+                GuiModelCatalog.packageListPage = 0;
+                GuiModelCatalog.selectedPackageIndex = 0;
+                GuiModelCatalog.selectedEntryIndex = 0;
+                GuiModelCatalog.selectedSliderValue = 0.0;
+                GuiModelCatalog.typeNow = JBMerchantType.model;
             }
 
             if (!lackList.isEmpty()) {

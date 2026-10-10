@@ -28,8 +28,9 @@ import org.joml.Quaternionf;
  * code rather than a reimplementation.
  *
  * <p>Unit convention: all coordinates are model units (1/16 block), exactly like 1.12.2. The pose
- * passed to {@link #render} must be in block units - rotations points and offsets are divided by 16
- * here and {@link ModelPart} divides the box vertices by 16, so the two match.
+ * passed to {@link #render} must be in block units - rotation points are divided by 16 here and
+ * {@link ModelPart} divides the box vertices by 16, so the two match; {@code offsetX/Y/Z} are applied
+ * raw, as 1.12.2 {@code ModelRenderer} did.
  */
 @OnlyIn(Dist.CLIENT)
 public class JBModelRenderer {
@@ -140,7 +141,8 @@ public class JBModelRenderer {
       }
 
       pose.pushPose();
-      pose.translate(this.offsetX * UNIT, this.offsetY * UNIT, this.offsetZ * UNIT);
+      // 1.12.2 ModelRenderer.render applies offsetX/Y/Z raw (block units), unlike the rotation point.
+      pose.translate(this.offsetX, this.offsetY, this.offsetZ);
       pose.translate(this.rotationPointX * UNIT, this.rotationPointY * UNIT, this.rotationPointZ * UNIT);
       if (this.rotateAngleZ != 0.0F) {
          pose.mulPose(zRotation(this.rotateAngleZ));

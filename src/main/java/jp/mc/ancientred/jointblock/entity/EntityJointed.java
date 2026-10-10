@@ -3322,7 +3322,8 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
             double savedPosX = riddenBy.getX();
             double savedPosZ = riddenBy.getZ();
             riddenBy.setPos(this.getX(), riddenBy.getY(), this.getZ());
-            if (riddenBy.save(riddenByNBT)) {
+            // 1.12.2 called Entity#writeToNBTAtomically (func_184198_c), not writeToNBTOptional
+            if (riddenBy.saveAsPassenger(riddenByNBT)) {
                if (psListTag == null) {
                   psListTag = new ListTag();
                }

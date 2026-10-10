@@ -91,7 +91,8 @@ public class ExplosionEx {
          for(int k2 = 0; k2 < list.size(); ++k2) {
             Entity entity = list.get(k2);
             if (!entity.ignoreExplosion()) {
-               double d12 = entity.distanceToSqr(posX, posY, posZ) / (double)f3;
+               // 1.12.2 used Entity#getDistance (linear), not distanceToSqr
+               double d12 = Math.sqrt(entity.distanceToSqr(posX, posY, posZ)) / (double)f3;
                if (d12 <= 1.0) {
                   double d5 = entity.getX() - posX;
                   double d7 = entity.getY() + (double)entity.getEyeHeight() - posY;

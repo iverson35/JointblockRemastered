@@ -1,3 +1,6 @@
 {
-  "parent": "jointblock:item/jbsound"
+  "parent": "jointblock:item/jbsound",
+  "overrides": [
+    { "predicate": { "jointblock:meta": 1 }, "model": "jointblock:item/jbparticle" }
+  ]
 }

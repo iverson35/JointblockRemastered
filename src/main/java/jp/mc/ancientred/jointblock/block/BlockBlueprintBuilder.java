@@ -47,7 +47,9 @@ import net.minecraft.world.phys.BlockHitResult;
  *       ({@code isOpaqueCube() == true} => full cube, {@code lightOpacity == 255},
  *       full-cube collision/{@code getBoundingBox} = {@code FULL_BLOCK_AABB}) were
  *       <em>not</em> overridden by this block, so 1.20.1 keeps the default occluding
- *       full-cube behaviour (no {@code noOcclusion()}, no shape override);</li>
+ *       full-cube behaviour (no {@code noOcclusion()}, no shape override), except that
+ *       {@code Material#blocksMovement() == false} made 1.12.2 {@code Block#isNormalCube}
+ *       false -&gt; {@code isRedstoneConductor((state, level, pos) -> false)};</li>
  *   <li>{@code Material#setNoPushMobility()} -> {@link PushReaction#DESTROY};</li>
  *   <li>{@code Material#isToolNotRequired()} stays {@code true} -> no
  *       {@code requiresCorrectToolForDrops()};</li>
@@ -86,7 +88,8 @@ public class BlockBlueprintBuilder extends BaseEntityBlock {
             .mapColor(MapColor.NONE)
             .instabreak()
             .sound(SoundType.STONE)
-            .pushReaction(PushReaction.DESTROY));
+            .pushReaction(PushReaction.DESTROY)
+            .isRedstoneConductor((state, level, pos) -> false));
       this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
    }
 

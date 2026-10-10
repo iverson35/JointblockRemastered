@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class BlockJointScaler extends BlockJointBase {
    @Override
    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-      return new TileEntityJoint(this.getJointType(), new int[]{50, 50, 50, 0}, pos, state);
+      return new TileEntityJoint(this.getJointType(), new int[]{100, 0, 0, 0}, pos, state);
    }
 
    @Override

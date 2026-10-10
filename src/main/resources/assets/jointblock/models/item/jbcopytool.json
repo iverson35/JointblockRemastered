@@ -1,3 +1,8 @@
 {
-  "parent": "jointblock:item/jbpalette"
+  "parent": "jointblock:item/jbpalette",
+  "overrides": [
+    { "predicate": { "jointblock:subtype": 3 }, "model": "jointblock:item/jbparamcpy" },
+    { "predicate": { "jointblock:subtype": 2 }, "model": "jointblock:item/jbmold_y" },
+    { "predicate": { "jointblock:subtype": 1 }, "model": "jointblock:item/jbmold" }
+  ]
 }

@@ -77,10 +77,10 @@ public class BakedSubIconItemModel implements BakedModel {
       return this.modelBase.usesBlockLight();
    }
 
-   /** 1.12.2 {@code func_188618_c}: the base model decides whether it needs a custom renderer. */
+   /** 1.12.2 {@code func_188618_c} hard-coded {@code false}: the merged model is a plain baked model. */
    @Override
    public boolean isCustomRenderer() {
-      return this.modelBase.isCustomRenderer();
+      return false;
    }
 
    /** 1.12.2 {@code func_177554_e}. */

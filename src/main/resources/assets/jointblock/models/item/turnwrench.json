@@ -1,3 +1,8 @@
 {
-  "parent": "jointblock:item/turnwrench_f"
+  "parent": "jointblock:item/turnwrench_f",
+  "overrides": [
+    { "predicate": { "jointblock:subtype": 3 }, "model": "jointblock:item/turnwrench_h" },
+    { "predicate": { "jointblock:subtype": 2 }, "model": "jointblock:item/turnwrench_w" },
+    { "predicate": { "jointblock:subtype": 1 }, "model": "jointblock:item/turnwrench_s" }
+  ]
 }

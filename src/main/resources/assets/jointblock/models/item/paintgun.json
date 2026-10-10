@@ -1,3 +1,11 @@
 {
-  "parent": "jointblock:item/paintgun_01"
+  "parent": "jointblock:item/paintgun_01",
+  "overrides": [
+    { "predicate": { "jointblock:pnum": 7 }, "model": "jointblock:item/paintgun_07" },
+    { "predicate": { "jointblock:pnum": 6 }, "model": "jointblock:item/paintgun_06" },
+    { "predicate": { "jointblock:pnum": 5 }, "model": "jointblock:item/paintgun_05" },
+    { "predicate": { "jointblock:pnum": 4 }, "model": "jointblock:item/paintgun_04" },
+    { "predicate": { "jointblock:pnum": 3 }, "model": "jointblock:item/paintgun_03" },
+    { "predicate": { "jointblock:pnum": 2 }, "model": "jointblock:item/paintgun_02" }
+  ]
 }

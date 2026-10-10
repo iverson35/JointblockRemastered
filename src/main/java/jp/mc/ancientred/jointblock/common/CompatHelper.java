@@ -28,7 +28,8 @@ public class CompatHelper {
    }
 
    private static boolean areItemsEqual(ItemStack stackA, ItemStack stackB) {
-      return stackA.getItem() == stackB.getItem() && stackA.getDamageValue() == stackB.getDamageValue();
+      // 1.12.2 used ItemStack.func_77970_a (item + meta + NBT); isSameItemSameTags compares item + tag (damage lives in the tag).
+      return ItemStack.isSameItemSameTags(stackA, stackB);
    }
 
    public static Entity getRiddenByEntity(Entity entity) {

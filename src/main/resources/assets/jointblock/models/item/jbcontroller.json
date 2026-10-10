@@ -1,3 +1,6 @@
 {
-  "parent": "jointblock:item/jbcon"
+  "parent": "jointblock:item/jbcon",
+  "overrides": [
+    { "predicate": { "jointblock:connected": 1 }, "model": "jointblock:item/jbcon_con" }
+  ]
 }

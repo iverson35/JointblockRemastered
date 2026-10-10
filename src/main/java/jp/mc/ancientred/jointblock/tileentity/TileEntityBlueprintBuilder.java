@@ -138,7 +138,8 @@ public class TileEntityBlueprintBuilder extends BlockEntity implements Container
       int xCoordi = this.worldPosition.getX();
       int yCoordi = this.worldPosition.getY();
       int zCoordi = this.worldPosition.getZ();
-      return WorldHelper.getTileEntity(this.level, xCoordi, yCoordi, zCoordi) != this ? false : par1EntityPlayer.distanceToSqr((double)xCoordi + 0.5, (double)yCoordi + 0.5, (double)zCoordi + 0.5) < 10.0;
+      // 1.12.2: par1EntityPlayer.getDistance(cx, cy, cz) < 10.0 (getDistance is not squared)
+      return WorldHelper.getTileEntity(this.level, xCoordi, yCoordi, zCoordi) != this ? false : par1EntityPlayer.distanceToSqr((double)xCoordi + 0.5, (double)yCoordi + 0.5, (double)zCoordi + 0.5) < 100.0;
    }
 
    @Override

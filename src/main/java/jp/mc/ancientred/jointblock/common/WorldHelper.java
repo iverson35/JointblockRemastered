@@ -14,6 +14,12 @@ public class WorldHelper {
       BlockState bState = world.getChunk(posX >> 4, posZ >> 4).getBlockState(new BlockPos(posX, posY, posZ));
       // 1.12 metadata does not exist in 1.20.1; the only metadata this mod relies on is
       // the joint block FACING direction index (BlockJointBase meta == Direction index).
+      // 1.12.2's PropertyDirection was HORIZONTAL-only, so the mod's blocks use HORIZONTAL_FACING;
+      // FACING is only checked for completeness.
+      if (bState.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+         return bState.getValue(BlockStateProperties.HORIZONTAL_FACING).get3DDataValue();
+      }
+
       return bState.hasProperty(BlockStateProperties.FACING) ? bState.getValue(BlockStateProperties.FACING).get3DDataValue() : 0;
    }
 

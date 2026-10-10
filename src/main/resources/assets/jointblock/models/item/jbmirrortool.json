@@ -1,3 +1,7 @@
 {
-  "parent": "jointblock:item/mirrortool_lr"
+  "parent": "jointblock:item/mirrortool_lr",
+  "overrides": [
+    { "predicate": { "jointblock:flipway": 2 }, "model": "jointblock:item/mirrortool_disabled" },
+    { "predicate": { "jointblock:flipway": 1 }, "model": "jointblock:item/mirrortool_ud" }
+  ]
 }

@@ -53,7 +53,9 @@ public abstract class BlockJointBase extends BaseEntityBlock {
    protected final Random rand = new Random();
 
    protected BlockJointBase() {
-      super(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE).strength(1.2F, 5.0F).pushReaction(PushReaction.IGNORE).noOcclusion());
+      // 1.12.2 Block#isNormalCube was false here: material.blocksMovement() && isOpaqueCube(), and func_149662_c returns false.
+      super(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE).strength(1.2F, 5.0F).pushReaction(PushReaction.IGNORE).noOcclusion()
+            .isRedstoneConductor((state, level, pos) -> false));
       this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
    }
 
@@ -224,7 +226,14 @@ public abstract class BlockJointBase extends BaseEntityBlock {
    }
 
    public static final BlockState convertItemMetaToBlockState(Item item, int meta) {
-      return item instanceof BlockItem ? ((BlockItem)item).getBlock().defaultBlockState() : null;
+      if (!(item instanceof BlockItem)) {
+         return null;
+      }
+
+      // 1.12.2 func_176203_a: the legacy meta was EnumFacing.byIndex(meta) (Y axis folded onto NORTH).
+      Direction facing = Direction.from3DDataValue(Math.abs(meta % 6));
+      BlockState blockState = ((BlockItem)item).getBlock().defaultBlockState();
+      return blockState.hasProperty(FACING) ? blockState.setValue(FACING, facing.getAxis() == Direction.Axis.Y ? Direction.NORTH : facing) : blockState;
    }
 
    @Override

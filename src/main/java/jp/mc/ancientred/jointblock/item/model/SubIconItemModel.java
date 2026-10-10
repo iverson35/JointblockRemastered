@@ -52,8 +52,13 @@ import org.slf4j.Logger;
 public class SubIconItemModel implements IUnbakedGeometry<SubIconItemModel> {
    private static final Logger LOGGER = LogUtils.getLogger();
 
-   /** 1.12.2 {@code MODEL_BASE}: the item model whose quads the sub icon is merged into. */
-   public static final ResourceLocation MODEL_BASE = new ResourceLocation("jointblock", "item/patterncutter");
+   /**
+    * 1.12.2 {@code MODEL_BASE} ({@code modj_jointblock:item/patterncutter}). 1.20.1 needs the base and the
+    * item model to be two files: the sub icon variants are selected by the {@code overrides} of
+    * {@code item/patterncutter.json}, and {@code ItemOverrides} bakes its targets eagerly, so merging from
+    * that file would recurse. {@code item/patterncutter_base.json} holds exactly the 1.12.2 base model.
+    */
+   public static final ResourceLocation MODEL_BASE = new ResourceLocation("jointblock", "item/patterncutter_base");
 
    /** Explicit sub icon model location, or null to derive it from this model's own location. */
    public final ResourceLocation subModelLoc;

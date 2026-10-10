@@ -1,3 +1,22 @@
 {
-  "parent": "jointblock:item/jbblueprint_b_e_n"
+  "parent": "jointblock:item/jbblueprint_b_e_n",
+  "overrides": [
+    { "predicate": { "jointblock:blueprint": 17 }, "model": "jointblock:item/jbblueprint_c_w_o" },
+    { "predicate": { "jointblock:blueprint": 16 }, "model": "jointblock:item/jbblueprint_c_w_s" },
+    { "predicate": { "jointblock:blueprint": 15 }, "model": "jointblock:item/jbblueprint_c_w_n" },
+    { "predicate": { "jointblock:blueprint": 14 }, "model": "jointblock:item/jbblueprint_r_w_o" },
+    { "predicate": { "jointblock:blueprint": 13 }, "model": "jointblock:item/jbblueprint_r_w_s" },
+    { "predicate": { "jointblock:blueprint": 12 }, "model": "jointblock:item/jbblueprint_r_w_n" },
+    { "predicate": { "jointblock:blueprint": 11 }, "model": "jointblock:item/jbblueprint_y_w_o" },
+    { "predicate": { "jointblock:blueprint": 10 }, "model": "jointblock:item/jbblueprint_y_w_s" },
+    { "predicate": { "jointblock:blueprint": 9 }, "model": "jointblock:item/jbblueprint_y_w_n" },
+    { "predicate": { "jointblock:blueprint": 8 }, "model": "jointblock:item/jbblueprint_b_w_o" },
+    { "predicate": { "jointblock:blueprint": 7 }, "model": "jointblock:item/jbblueprint_b_w_s" },
+    { "predicate": { "jointblock:blueprint": 6 }, "model": "jointblock:item/jbblueprint_b_w_n" },
+    { "predicate": { "jointblock:blueprint": 5 }, "model": "jointblock:item/jbblueprint_y_e_o" },
+    { "predicate": { "jointblock:blueprint": 4 }, "model": "jointblock:item/jbblueprint_y_e_s" },
+    { "predicate": { "jointblock:blueprint": 3 }, "model": "jointblock:item/jbblueprint_y_e_n" },
+    { "predicate": { "jointblock:blueprint": 2 }, "model": "jointblock:item/jbblueprint_b_e_o" },
+    { "predicate": { "jointblock:blueprint": 1 }, "model": "jointblock:item/jbblueprint_b_e_s" }
+  ]
 }

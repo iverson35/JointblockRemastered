@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -74,6 +75,31 @@ public class RenderEntityJointed extends EntityRenderer<EntityJointed> {
          // The dispatcher PoseStack already sits on the entity, so the model offset is zero.
          doRenderWithOwnMatrix(entity, 0.0, 0.0, 0.0, entityYaw, partialTick, pose, bufferSource, packedLight);
       }
+   }
+
+   /**
+    * 1.12.2 {@code func_70070_b} sampled the packed light at
+    * {@code floor(x), floor(y + (coreHeight < 2.0F ? coreHeight + 1.0F : coreHeight)), floor(z)} and
+    * returned 0 outside loaded chunks. {@code EntityRenderer#getPackedLightCoords} is final in
+    * 1.20.1, so the two level hooks it packs ({@code block << 4 | sky << 20}) carry that sampling.
+    */
+   private static int jointPackedLight(EntityJointed entity) {
+      float offset = entity.coreHeight;
+      if (offset < 2.0F) {
+         ++offset;
+      }
+      BlockPos pos = BlockPos.containing(entity.getX(), entity.getY() + (double)offset, entity.getZ());
+      return entity.level().hasChunkAt(pos) ? LevelRenderer.getLightColor(entity.level(), pos) : 0;
+   }
+
+   @Override
+   protected int getBlockLightLevel(EntityJointed entity, BlockPos pos) {
+      return jointPackedLight(entity) >> 4 & 0xFFFF;
+   }
+
+   @Override
+   protected int getSkyLightLevel(EntityJointed entity, BlockPos pos) {
+      return jointPackedLight(entity) >> 20 & 0xFFFF;
    }
 
    /**

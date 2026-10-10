@@ -27,7 +27,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * {@code setTag} replaces {@code func_77982_d}.
  */
 public class ExJBBluePrintInfo implements IJBRMerchantEntry {
-    public static final String DEFAULT_PACKAGE_BLUEPRINT_MEM_SAVE_KEY_PREF = "bp-jbr:df";
+    // 1.12.2 declared this constant without the trailing ':' but keyed the map with the literal
+    // "bp-jbr:df:" + blueprintId, so the runtime key keeps the separator.
+    public static final String DEFAULT_PACKAGE_BLUEPRINT_MEM_SAVE_KEY_PREF = "bp-jbr:df:";
     public static final String BLUEPRINT_MEM_SAVE_KEY_PREF = "bp-jbr:ex:";
     public static final String NBT_TAGNAME_DUMMEY_BP_KEY = "dummeyBpKey";
 

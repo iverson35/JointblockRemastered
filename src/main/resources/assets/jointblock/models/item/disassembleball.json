@@ -1,3 +1,6 @@
 {
-  "parent": "jointblock:item/daball"
+  "parent": "jointblock:item/daball",
+  "overrides": [
+    { "predicate": { "jointblock:subtype": 1 }, "model": "jointblock:item/mtball" }
+  ]
 }

@@ -1,3 +1,10 @@
 {
-  "parent": "jointblock:item/jbiff"
+  "parent": "jointblock:item/jbiff",
+  "overrides": [
+    { "predicate": { "jointblock:posnum": 5 }, "model": "jointblock:item/jbmsb_ff" },
+    { "predicate": { "jointblock:posnum": 4 }, "model": "jointblock:item/jbmsb_f" },
+    { "predicate": { "jointblock:posnum": 3 }, "model": "jointblock:item/jbmsb_bb" },
+    { "predicate": { "jointblock:posnum": 2 }, "model": "jointblock:item/jbmsb_b" },
+    { "predicate": { "jointblock:posnum": 1 }, "model": "jointblock:item/jbmsb" }
+  ]
 }
