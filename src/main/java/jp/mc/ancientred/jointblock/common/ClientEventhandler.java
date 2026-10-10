@@ -125,8 +125,6 @@ public class ClientEventhandler {
     * so the far view is active by default.
     */
    private static boolean enableFakeTransform = true;
-   /** Temporary diagnostic: the last logged far-view state, so the line only prints on change. */
-   private static String lastFarViewDiag = "";
 
    /** 1.12.2 {@code handleGuiSettingsChanged}: any screen init checks for a language change. */
    @SubscribeEvent
@@ -174,12 +172,6 @@ public class ClientEventhandler {
                         isCamEnabled = true;
                         cancelRenderHand = true;
                         needCameraRollReset = true;
-                     }
-
-                     String diag = "seatMode=" + seat.cameraModeSeatNum + " farFlag=" + entityJointed.isChangeThirdPersonViewDirtanceFar() + " level=" + entityJointed.getThirdPersonViewFarLevel() + " camType=" + mc.options.getCameraType() + " applied=" + isCamEnabled;
-                     if (!diag.equals(lastFarViewDiag)) {
-                        lastFarViewDiag = diag;
-                        JointBlockRemastered.LOGGER.info("[jb-farview] " + diag);
                      }
                   }
                }

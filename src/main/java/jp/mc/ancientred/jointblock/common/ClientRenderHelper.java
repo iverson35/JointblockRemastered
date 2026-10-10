@@ -49,6 +49,9 @@ public class ClientRenderHelper {
             looking.z *= dist;
          }
 
+         // Camera#setup lerps xo -> x itself, so the previous-position fields must hold the player's
+         // previous-tick position plus the *same* offset: that makes the lerp produce exactly
+         // playerPos(partialTick) + offset, i.e. an orbit centred on the interpolated player.
          camEntity.setPos(player.getX() + looking.x, player.getY() + looking.y, player.getZ() + looking.z);
          camEntity.xo = player.xo + looking.x;
          camEntity.yo = player.yo + looking.y;
@@ -56,16 +59,19 @@ public class ClientRenderHelper {
          camEntity.xOld = player.xOld + looking.x;
          camEntity.yOld = player.yOld + looking.y;
          camEntity.zOld = player.zOld + looking.z;
-         camEntity.setXRot(player.getXRot());
-         camEntity.xRotO = player.xRotO;
-         camEntity.setYRot(player.getYRot());
 
-         for(camEntity.yRotO = player.yRotO; camEntity.getYRot() - camEntity.yRotO < -180.0F; camEntity.yRotO -= 360.0F) {
-         }
-
-         while(camEntity.getYRot() - camEntity.yRotO >= 180.0F) {
-            camEntity.yRotO += 360.0F;
-         }
+         // The rotation must be exactly the one the offset above was built from: getViewVector uses
+         // the player's getViewXRot/getViewYRot, and Camera#setup reads those same two accessors off
+         // the camera entity before adding its own 4-block zoom. Writing player.getXRot()/xRotO here
+         // instead hands Camera#setup an interpolated pitch, while a LocalPlayer reports its *raw*
+         // pitch as its view pitch - one tick apart. The zoom then runs along a line the offset was
+         // not computed for and the camera swings off the player-centred orbit while the view turns.
+         float viewPitch = player.getViewXRot(partialTick);
+         float viewYaw = player.getViewYRot(partialTick);
+         camEntity.setXRot(viewPitch);
+         camEntity.xRotO = viewPitch;
+         camEntity.setYRot(viewYaw);
+         camEntity.yRotO = viewYaw;
 
          mc.setCameraEntity(camEntity);
          return true;
@@ -77,8 +83,12 @@ public class ClientRenderHelper {
       double d0 = player.xo + (player.getX() - player.xo) * (double)partialTicks;
       double d1 = player.yo + (player.getY() - player.yo) * (double)partialTicks + (double)f;
       double d2 = player.zo + (player.getZ() - player.zo) * (double)partialTicks;
-      float f1 = player.getYRot();
-      float f2 = player.getXRot();
+      // Cast the ray along the same view angles the offset it shortens was computed from
+      // (getViewVector in setUpThirdPersonFarViewCamera) rather than the raw yRot/xRot: the two are
+      // the same for a LocalPlayer today, but keeping both on the view accessors is what makes the
+      // hit distance - and so the camera distance - stay in step with the offset it is limiting.
+      float f1 = player.getViewYRot(partialTicks);
+      float f2 = player.getViewXRot(partialTicks);
       if (reverse) {
          f2 += 180.0F;
       }
