@@ -47,7 +47,7 @@ import jp.mc.ancientred.jointblock.registry.JBClientEntityTypes;
 /**
  * JointBlock Remastered - Forge 1.20.1 port of JointBlock 0.8.4 (MC 1.12.2, by ARUBE).
  *
- * <p>See NOTICE.md for attribution and MIGRATION_PLAN.md for the porting status.
+ * <p>See README.md for attribution and MIGRATION_PLAN.md for the porting status.
  */
 @Mod(JointBlockRemastered.MOD_ID)
 public class JointBlockRemastered {

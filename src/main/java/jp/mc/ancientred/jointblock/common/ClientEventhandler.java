@@ -25,11 +25,14 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FogType;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -216,6 +219,42 @@ public class ClientEventhandler {
          event.setCanceled(true);
       }
 
+   }
+
+   /**
+    * 1.12.2's server only warned when an attack named an entity it considered invalid
+    * ({@code NetHandlerPlayServer.processUseEntity}: "Player {} tried to attack an invalid
+    * entity"), so the attack packet {@code Minecraft.clickMouse} sends before the swing was
+    * harmless and {@code ItemJBMouse.onEntitySwing} could drive the seat from the swing alone.
+    * 1.20.1 turned the same warning into a kick: {@code ServerGamePacketListenerImpl$1} calls
+    * {@code disconnect(Component.translatable("multiplayer.disconnect.invalid_entity_attacked"))}
+    * - shown as "试图攻击无效实体" - when the attack packet names an {@code ExperienceOrb}, an
+    * {@code AbstractArrow} or the player itself. JointBlock's bullets are {@code AbstractArrow}s
+    * and the unit's weapon drops experience orbs, so a stray left click on one while seated drops
+    * the player out of the world.
+    *
+    * <p>Cancel the attack interaction before {@code MultiPlayerGameMode.attack} sends the packet,
+    * and keep the hand swing so the server still runs {@code ItemJBMouse.onEntitySwing} and records
+    * the click on the seat ({@code isRiddenbyUsedItemList}) exactly as 1.12.2 did.
+    */
+   @SubscribeEvent
+   public static void onInteractionKeyMappingTriggered(InputEvent.InteractionKeyMappingTriggered event) {
+      if (!event.isAttack()) {
+         return;
+      }
+
+      Minecraft mc = Minecraft.getInstance();
+      if (mc.player == null) {
+         return;
+      }
+
+      Entity hitEntity = mc.hitResult instanceof EntityHitResult hitResult ? hitResult.getEntity() : null;
+      if (!(hitEntity instanceof ExperienceOrb) && !(hitEntity instanceof AbstractArrow)) {
+         return;
+      }
+
+      event.setCanceled(true);
+      event.setSwingHand(true);
    }
 
    /**
