@@ -13,6 +13,7 @@ import jp.mc.ancientred.jointblock.config.JBKeyHanlder;
 import jp.mc.ancientred.jointblock.entity.EntityJBClientCamera;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
 import jp.mc.ancientred.jointblock.entity.EntitySeatPart;
+import jp.mc.ancientred.jointblock.entity.IIgnoreTarget;
 import jp.mc.ancientred.jointblock.gui.OverlayRingDebugRendeler;
 import jp.mc.ancientred.jointblock.item.ICeramicModBoundItem;
 import jp.mc.ancientred.jointblock.item.ItemJBTargetSight;
@@ -25,9 +26,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -44,6 +43,7 @@ import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -222,20 +222,23 @@ public class ClientEventhandler {
    }
 
    /**
-    * 1.12.2's server only warned when an attack named an entity it considered invalid
+    * 1.12.2's server only warned when an attack packet named an entity it considered invalid
     * ({@code NetHandlerPlayServer.processUseEntity}: "Player {} tried to attack an invalid
-    * entity"), so the attack packet {@code Minecraft.clickMouse} sends before the swing was
-    * harmless and {@code ItemJBMouse.onEntitySwing} could drive the seat from the swing alone.
-    * 1.20.1 turned the same warning into a kick: {@code ServerGamePacketListenerImpl$1} calls
+    * entity"), so the packet {@code Minecraft.clickMouse} sends before the hand swing was harmless
+    * and {@code ItemJBMouse.onEntitySwing} could drive the seat from the swing alone. 1.20.1 turned
+    * the same warning into a kick: {@code ServerGamePacketListenerImpl$1.onAttack} calls
     * {@code disconnect(Component.translatable("multiplayer.disconnect.invalid_entity_attacked"))}
-    * - shown as "试图攻击无效实体" - when the attack packet names an {@code ExperienceOrb}, an
-    * {@code AbstractArrow} or the player itself. JointBlock's bullets are {@code AbstractArrow}s
-    * and the unit's weapon drops experience orbs, so a stray left click on one while seated drops
-    * the player out of the world.
+    * - shown as "试图攻击无效实体" - when the packet names an {@code ItemEntity}, an
+    * {@code ExperienceOrb}, an {@code AbstractArrow} or the player itself.
     *
-    * <p>Cancel the attack interaction before {@code MultiPlayerGameMode.attack} sends the packet,
-    * and keep the hand swing so the server still runs {@code ItemJBMouse.onEntitySwing} and records
-    * the click on the seat ({@code isRiddenbyUsedItemList}) exactly as 1.12.2 did.
+    * <p>Vanilla never sends such a packet because none of those entities is pickable, but the
+    * unit's parts are: {@code EntitySeatPart extends PartEntity<EntityJointed>} and overrides
+    * {@code isPickable()} with {@code seatEnabled}, so the crosshair lands on a part whose entity id
+    * exists on the client only - the server resolves that id to whatever entity happens to own it,
+    * and the kick follows. Cancel the attack interaction before {@code MultiPlayerGameMode.attack}
+    * sends the packet, and keep the hand swing so the server still runs
+    * {@code ItemJBMouse.onEntitySwing} and records the click on the seat
+    * ({@code isRiddenbyUsedItemList}) exactly as 1.12.2 did.
     */
    @SubscribeEvent
    public static void onInteractionKeyMappingTriggered(InputEvent.InteractionKeyMappingTriggered event) {
@@ -249,7 +252,7 @@ public class ClientEventhandler {
       }
 
       Entity hitEntity = mc.hitResult instanceof EntityHitResult hitResult ? hitResult.getEntity() : null;
-      if (!(hitEntity instanceof ExperienceOrb) && !(hitEntity instanceof AbstractArrow)) {
+      if (!(hitEntity instanceof PartEntity<?>) && !(hitEntity instanceof IIgnoreTarget)) {
          return;
       }
 
