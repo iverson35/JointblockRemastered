@@ -24,8 +24,17 @@ public class BlockJointSeat extends BlockJointBase {
       if (te != null && te.getModelItemID() == 0 && te.carvingData == null) {
          return this.isSeat(te) ? AABB_SEAT : AABB_ELSE;
       } else {
-         return Shapes.block();
+         // 1.12.2 returned Block.NULL_AABB (an empty box) here, not the full cube: a joint block that
+         // has a model or carving applied is drawn by its own model and stays intangible, otherwise it
+         // swallows the selection ray of whatever it is attached to.
+         return Shapes.empty();
       }
+   }
+
+   /** 1.12.2 {@code func_185496_a} returned {@code func_180646_a}, so collision and selection match. */
+   @Override
+   public VoxelShape getCollisionShape(BlockState bState, BlockGetter world, BlockPos pos, CollisionContext context) {
+      return this.getShape(bState, world, pos, context);
    }
 
    private boolean isSeat(TileEntityJoint te) {

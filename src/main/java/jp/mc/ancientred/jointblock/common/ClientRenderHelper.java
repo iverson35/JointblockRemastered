@@ -52,12 +52,18 @@ public class ClientRenderHelper {
          // Camera#setup lerps xo -> x itself, so the previous-position fields must hold the player's
          // previous-tick position plus the *same* offset: that makes the lerp produce exactly
          // playerPos(partialTick) + offset, i.e. an orbit centred on the interpolated player.
-         camEntity.setPos(player.getX() + looking.x, player.getY() + looking.y, player.getZ() + looking.z);
+         //
+         // The eye height belongs in that base position: this camera is an entity whose own
+         // getEyeHeight() is 0, so Camera#setup adds nothing, while the vanilla third-person camera
+         // of the player starts from its eyes. 1.12 got the same result by translating the already
+         // eye-positioned camera, so leaving it out drops the view by 1.62 blocks.
+         double eye = (double)player.getEyeHeight();
+         camEntity.setPos(player.getX() + looking.x, player.getY() + eye + looking.y, player.getZ() + looking.z);
          camEntity.xo = player.xo + looking.x;
-         camEntity.yo = player.yo + looking.y;
+         camEntity.yo = player.yo + eye + looking.y;
          camEntity.zo = player.zo + looking.z;
          camEntity.xOld = player.xOld + looking.x;
-         camEntity.yOld = player.yOld + looking.y;
+         camEntity.yOld = player.yOld + eye + looking.y;
          camEntity.zOld = player.zOld + looking.z;
 
          // The rotation must be exactly the one the offset above was built from: getViewVector uses
