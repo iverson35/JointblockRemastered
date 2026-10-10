@@ -23,11 +23,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * <p>Plain data holder for the per-frame indicator list ({@link #addIndicate},
  * {@link #addIndicateColor}, {@link #addIndicatePalette}, {@link #clearAllIndicates}) plus the
- * static HUD entry point {@link #render(GuiGraphics, float, int, int)}. Main wraps {@code render} in
- * an {@code IGuiOverlay} and registers it with {@code RegisterGuiOverlaysEvent}
+ * static HUD entry point {@link #render(GuiGraphics, float, int, int)}. {@code JBClientSetup}
+ * ({@code onRegisterGuiOverlays}) wraps {@code render} in an {@code IGuiOverlay} and registers it
+ * with {@code RegisterGuiOverlaysEvent} above {@code VanillaGuiOverlay.BOSS_EVENT_PROGRESS}
  * ({@code IGuiOverlay.render(ForgeGui, GuiGraphics, float partialTick, int screenWidth,
- * int screenHeight)} is the 1.20.1 substitute for the 1.12 {@code RenderGameOverlayEvent.Post}); this
- * class does not register itself.
+ * int screenHeight)} is the 1.20.1 substitute for the 1.12 {@code RenderGameOverlayEvent.Post} at
+ * {@code ElementType.BOSSHEALTH}); this class does not register itself.
  *
  * <p>Drawing substitutions:
  * <ul>
@@ -50,6 +51,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class OverlayRendeler {
    private static final ResourceLocation resource = ResourceLocation.tryBuild("jointblock", "textures/gui/guijointblock.png");
+   /** Unit status bars: translucent track, vanilla boss-bar red for health, mod palette blue for energy. */
+   private static final int BAR_BACKGROUND = 0x80000000;
+   private static final int BAR_HEALTH = 0xFFB92A00;
+   private static final int BAR_ENERGY = 0xFF6D6DEB;
    private static final String[] PALETTE_CHARS = new String[]{"1", "2", "3", "4", "5", "6", "B"};
    /** 1.12 field: window centre offset applied to every indicator row. */
    public static int indicatorStringCenterPad = 0;
@@ -62,7 +67,7 @@ public class OverlayRendeler {
 
    /**
     * 1.12 {@code renderOverlay(RenderGameOverlayEvent.Post)}; the 1.20.1 equivalent is the
-    * {@code IGuiOverlay} registered by Main through {@code RegisterGuiOverlaysEvent}. Keeps the
+    * {@code IGuiOverlay} registered by {@code JBClientSetup#onRegisterGuiOverlays}. Keeps the
     * dispatch order and the seat-part guard of the original (the target sight overlay dereferences
     * the ridden seat part unconditionally).
     */
@@ -91,11 +96,17 @@ public class OverlayRendeler {
          float energyScale = energy / energyMax;
          int healthlen = (int)(healthScale * (float)barWidth);
          int energylen = (int)(energyScale * (float)barWidth);
-         drawTexturedModalRect(guiGraphics, left, top, 10, 84, barWidth, 5);
-         drawTexturedModalRect(guiGraphics, left, top + 8, 10, 74, barWidth, 5);
+         // 1.12.2 drew these four quads with drawTexturedModalRect *without* binding a texture,
+         // so they sampled whatever the vanilla HUD had bound last - minecraft:textures/gui/
+         // icons.png, whose v=74..93 rows held the boss-bar sprites (that is where the bar look
+         // came from). The port passed guijointblock.png to blit() instead, and that texture is
+         // opaque black in exactly this region, so both bars rendered black regardless of the
+         // values. Draw them explicitly with the vanilla boss-bar colours (bars.png) instead.
+         guiGraphics.fill(left, top, left + barWidth, top + 5, BAR_BACKGROUND);
+         guiGraphics.fill(left, top + 8, left + barWidth, top + 8 + 5, BAR_BACKGROUND);
          if (healthlen > 0) {
-            drawTexturedModalRect(guiGraphics, left, top, 10, 89, healthlen, 5);
-            drawTexturedModalRect(guiGraphics, left, top + 8, 10, 79, energylen, 5);
+            guiGraphics.fill(left, top, left + healthlen, top + 5, BAR_HEALTH);
+            guiGraphics.fill(left, top + 8, left + energylen, top + 8 + 5, BAR_ENERGY);
          }
 
          int heightFix = 2 - font.lineHeight / 2;
