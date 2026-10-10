@@ -6,7 +6,6 @@ import jp.mc.ancientred.jointblock.api.IJBAddon;
 import jp.mc.ancientred.jointblock.api.IJBModelItem;
 import jp.mc.ancientred.jointblock.common.CompatHelper;
 import jp.mc.ancientred.jointblock.modelpack.ExtraPackage;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -32,8 +31,6 @@ public class ExJBAddonItemInfo implements IJBRMerchantEntry {
     public ExJBAddonInfo addon;
     public ItemStack addonItemStack;
 
-    @OnlyIn(Dist.CLIENT)
-    public String iconLoadInFileEntryName;
     @OnlyIn(Dist.CLIENT)
     ModelMerchantItem merchantModel;
 

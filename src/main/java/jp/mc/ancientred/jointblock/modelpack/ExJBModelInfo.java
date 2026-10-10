@@ -5,7 +5,6 @@ import jp.mc.ancientred.jbrobot.item.merchant.IJBRMerchantEntry;
 import jp.mc.ancientred.jointblock.api.IJBAddon;
 import jp.mc.ancientred.jointblock.api.IJBModelItem;
 import jp.mc.ancientred.jointblock.common.CompatHelper;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -18,8 +17,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * <p>1.12.2 {@code jp.mc.ancientred.jbrobot.item.external.ExJBModelInfo}. The 1.12.2 inventory
  * baking half ({@code TextureAtlasSprite icon}, {@code IBakedModel bakedItemModel},
  * {@code domainedIconZipFileName}) is gone: 1.20.1 bakes pack item icons from the model JSONs the
- * resource pack synthesizes per model (see {@code ModelPackResources}), so only the icon's
- * {@link ResourceLocation} is kept here.
+ * resource pack synthesizes per model (see {@code ModelPackResources}), which read
+ * {@code itemIconFile} from {@link #properties} themselves. {@link #model} is built by the client
+ * setup, so it stays client only.
  */
 public class ExJBModelInfo implements IJBRMerchantEntry {
     public JsonObject properties;
@@ -42,12 +42,6 @@ public class ExJBModelInfo implements IJBRMerchantEntry {
     public int renderType;
     @OnlyIn(Dist.CLIENT)
     public float catalogScale;
-    @OnlyIn(Dist.CLIENT)
-    public String iconLoadInFileEntryName;
-
-    /** Resolved from {@link #iconLoadInFileEntryName} or the package icon by the client pack. */
-    @OnlyIn(Dist.CLIENT)
-    public ResourceLocation iconLocation;
 
     public ExJBModelInfo(ExtraPackage parent, int argModelId, String argModelName, ExJBModelLayer[] argModelLayers, JsonObject argProperties) {
         this.parent = parent;

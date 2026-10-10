@@ -1,14 +1,16 @@
 package jp.mc.ancientred.jbrobot.proxy;
 
 import jp.mc.ancientred.jbrobot.JBRobotMODContainer;
-import jp.mc.ancientred.jbrobot.item.external.ExJBAddonItemInfo;
-import jp.mc.ancientred.jointblock.modelpack.ExJBModelInfo;
-import jp.mc.ancientred.jbrobot.item.external.ExJBSoundItemInfo;
-import jp.mc.ancientred.jointblock.modelpack.ExtraPackage;
+import jp.mc.ancientred.jbrobot.item.external.MultiLayeredModel;
+import jp.mc.ancientred.jbrobot.model.technesample.ModelRenderError;
 import jp.mc.ancientred.jbrobot.registry.JBRItems;
 import jp.mc.ancientred.jbrobot.registry.JBRMenuTypes;
-import jp.mc.ancientred.jointblock.item.IColorHanldlerItem;
 import jp.mc.ancientred.jointblock.JointBlockRemastered;
+import jp.mc.ancientred.jointblock.api.IJBModelItem;
+import jp.mc.ancientred.jointblock.item.IColorHanldlerItem;
+import jp.mc.ancientred.jointblock.modelpack.ExJBModelInfo;
+import jp.mc.ancientred.jointblock.modelpack.ExJBModelLayer;
+import jp.mc.ancientred.jointblock.modelpack.ExtraPackage;
 import jp.mc.ancientred.jointblock.modelpack.JBRModelUtils;
 import jp.mc.ancientred.jointblock.modelpack.ModelPackResources;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -37,7 +39,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
  *
  * <p>1.20.1 needs none of the mesh/GL half: pack textures, language files and {@code sounds.json}
  * are served by {@link ModelPackResources} as an always-active resource pack, so only two things
- * remain - the pack registration itself and the per-entry render flags the catalog GUI reads.
+ * remain - the pack registration itself and the per-model render models/render flags the joint block
+ * renderer and the catalog GUI read.
  */
 @Mod.EventBusSubscriber(modid = JointBlockRemastered.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class JBRClientSetup {
@@ -117,7 +120,12 @@ public final class JBRClientSetup {
         event.enqueueWork(JBRClientSetup::readEntryRenderFlags);
     }
 
-    /** 1.12.2 {@code setupModelResoureceForClient}/{@code setupAddonItemResoureceForClient}. */
+    /**
+     * 1.12.2 {@code CommonProxyClient#setupModelResoureceForClient}: built each model's render model
+     * and read the catalog render flags. The addon/sound item halves of that pass only copied
+     * {@code itemIconFile} into the (1.20.1 unused) icon field, which {@link ModelPackResources}
+     * now reads from the entry properties itself.
+     */
     private static void readEntryRenderFlags() {
         for (ExtraPackage pack : JBRobotMODContainer.importedExPackageList) {
             for (int i = 0; i < pack.modelNums; ++i) {
@@ -126,6 +134,7 @@ public final class JBRClientSetup {
                     continue;
                 }
 
+                info.model = buildClientModel(info);
                 info.renderType = 0;
                 info.renderExpand = 0.0;
                 info.catalogScale = 1.0F;
@@ -150,39 +159,31 @@ public final class JBRClientSetup {
                             info.catalogScale = catalogScale;
                         }
                     }
-
-                    if (info.properties.has("itemIconFile")) {
-                        info.iconLoadInFileEntryName = JBRModelUtils.getStringFromJson(info.properties, "itemIconFile");
-                        if (!JBRModelUtils.isStringEmpty(info.iconLoadInFileEntryName)) {
-                            info.iconLocation = pack.packResource(stripExtension(info.iconLoadInFileEntryName));
-                        }
-                    }
-                }
-
-                if (info.iconLocation == null && pack.packageIconFileName != null && !pack.packageIconFileName.isEmpty()) {
-                    info.iconLocation = pack.packResource(stripExtension(pack.packageIconFileName));
-                }
-            }
-
-            for (int i = 0; i < pack.addonItemNums; ++i) {
-                ExJBAddonItemInfo info = pack.addonItemsLoaded[pack.addonItemsIndexCompressed[i]];
-                if (info != null && info.properties != null && info.properties.has("itemIconFile")) {
-                    info.iconLoadInFileEntryName = JBRModelUtils.getStringFromJson(info.properties, "itemIconFile");
-                }
-            }
-
-            for (int i = 0; i < pack.soundItemNums; ++i) {
-                ExJBSoundItemInfo info = pack.soundItemsLoaded[pack.soundItemsIndexCompressed[i]];
-                if (info != null && info.properties != null && info.properties.has("itemIconFile")) {
-                    info.iconLoadInFileEntryName = JBRModelUtils.getStringFromJson(info.properties, "itemIconFile");
                 }
             }
         }
-
     }
 
-    private static String stripExtension(String fileName) {
-        int dot = fileName.lastIndexOf('.');
-        return dot > 0 ? fileName.substring(0, dot) : fileName;
+    /**
+     * 1.12.2 resolved every layer's {@code .obj} and texture zip entry up front and fell back to
+     * {@code ModelRenderError.instanceError} when one of them was missing. 1.20.1 parses the
+     * {@code .obj} lazily ({@code MultiLayeredModel#ensureLayerLoaded}), so only the entries are
+     * resolved here - the same check 1.12.2 made before reading them.
+     */
+    private static IJBModelItem.IJBModel buildClientModel(ExJBModelInfo info) {
+        ExtraPackage pack = info.parent;
+        ExJBModelLayer[] layers = info.modelLayers;
+        if (pack == null || pack.fileLoader == null || layers == null || layers.length == 0) {
+            return ModelRenderError.instanceError;
+        }
+
+        for (ExJBModelLayer layer : layers) {
+            if (JBRModelUtils.isInvalidFileLoaderEntiry(pack.getEntryIgnoreCase(layer.modelFileName))
+                    || JBRModelUtils.isInvalidFileLoaderEntiry(pack.getEntryIgnoreCase(layer.textureFileName))) {
+                return ModelRenderError.instanceError;
+            }
+        }
+
+        return new MultiLayeredModel(info);
     }
 }

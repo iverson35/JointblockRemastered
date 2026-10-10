@@ -5,7 +5,9 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import jp.mc.ancientred.jointblock.api.IJBSound;
 import jp.mc.ancientred.jointblock.common.CompatHelper;
+import jp.mc.ancientred.jointblock.common.JBLegacyNames;
 import jp.mc.ancientred.jointblock.item.ItemJBEffect;
+import jp.mc.ancientred.jointblock.modelpack.ModelPackResources;
 import jp.mc.ancientred.jointblock.registry.JBItems;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJointCore;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,7 +25,6 @@ public class EffectInventory extends SimpleContainer {
    private WeakReference<TileEntityJointCore> inventoryHolderWeak;
    private static final String NBT_TAGNAME_EFFECTSLOTS_EXPORT = "jb:efcslt";
    private static final String NBT_TAGNAME_EFFECTBARY_EXPORT = "bary";
-   private static final String JBROBOTMOD_ID_LC = "modj_jbrobot:";
 
    public EffectInventory(TileEntityJointCore inventoryHolder, String inventoryTitle) {
       super(16);
@@ -93,8 +94,11 @@ public class EffectInventory extends SimpleContainer {
                         continue;
                      }
 
-                     if (namespacedItemName.startsWith("modj_jbrobot:")) {
-                        namespacedItemName = namespacedItemName.replaceFirst("modj_jbrobot:", ":");
+                     // 1.12.2 payloads stored addon items with the namespace stripped (":m_<pack>"),
+                     // so keep that convention for the current addon namespace.
+                     String addonPrefix = ModelPackResources.ITEM_NAMESPACE + ":";
+                     if (namespacedItemName.startsWith(addonPrefix)) {
+                        namespacedItemName = ":" + namespacedItemName.substring(addonPrefix.length());
                      }
                   }
 
@@ -133,11 +137,9 @@ public class EffectInventory extends SimpleContainer {
                         if (StringUtil.isNullOrEmpty(namespacedItemName)) {
                            objItem = JBItems.JBEffectItem;
                         } else {
-                           if (namespacedItemName.startsWith(":")) {
-                              namespacedItemName = namespacedItemName.replaceFirst("\\:", "modj_jbrobot:");
-                           }
-
-                           objItem = (Item)BuiltInRegistries.ITEM.getOptional(new ResourceLocation(namespacedItemName.toLowerCase())).orElse((Item)null);
+                           // 1.12.2 stored addon items namespace-stripped (":m_<pack>") and everything
+                           // else under the old mod ids; JBLegacyNames expands both to this port's ids.
+                           objItem = JBLegacyNames.itemByName(namespacedItemName);
                         }
 
                         if (objItem != null) {

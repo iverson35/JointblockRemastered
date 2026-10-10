@@ -14,8 +14,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import jp.mc.ancientred.jbrobot.item.external.ExJBAddonItemInfo;
 import jp.mc.ancientred.jbrobot.item.external.ExJBSound;
 import jp.mc.ancientred.jbrobot.item.external.ExJBSoundInfo;
+import jp.mc.ancientred.jbrobot.item.external.ExJBSoundItemInfo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.AbstractPackResources;
 import net.minecraft.server.packs.PackType;
@@ -31,6 +33,9 @@ import net.minecraft.server.packs.resources.IoSupplier;
  * {@code sounds.json} through the {@code ResourceManager} instead, so this pack serves:
  * <ul>
  *   <li>{@code jbrextrapackages:<packageId>/<zip entry>} - raw zip passthrough (textures, .obj, ...);</li>
+ *   <li>{@code jbrextrapackages:textures/item/<packageId>/<icon>.png} - the pack's
+ *       {@code itemIconFile}s again, under the blocks atlas' {@code item/} source, so item models
+ *       can address them as sprites ({@link #ICON_ALIAS_PREFIX});</li>
  *   <li>{@code jbrextrapackages:lang/<code>.json} - the packs' {@code lang/*.lang|json}, merged;</li>
  *   <li>{@code jbrextrapackages:models/<packageId>/model_<id>.json} - one flat item model per pack
  *       model, so the pack's model item shows its own icon in inventories and in the catalog;</li>
@@ -57,6 +62,15 @@ public class ModelPackResources extends AbstractPackResources {
 
     private static final String NS = ExtraPackage.EXTRA_PACKAGE_ROOT_DOMAIN;
     private static final String ITEM_PREFIX = "models/item/";
+
+    /**
+     * The pack's {@code itemIconFile}s are served a second time under this path: 1.20.1 item models
+     * can only address sprites of the blocks atlas, and the only directory sources of that atlas a
+     * pack can join are {@code textures/block} and {@code textures/item} (the vanilla source list
+     * stitches {@code textures/item/**} of every namespace under the {@code item/} prefix).
+     */
+    private static final String ICON_ALIAS_PREFIX = "textures/item/";
+
     private static final Gson GSON = new Gson();
 
     private final List<ExtraPackage> packs;
@@ -140,6 +154,19 @@ public class ModelPackResources extends AbstractPackResources {
                 String generatedPath = generated.getPath();
                 if (generatedPath.startsWith(path)) {
                     output.accept(generated, () -> new ByteArrayInputStream(generate(generated)));
+                }
+            }
+
+            for (String iconFile : iconFileNames(pack)) {
+                ResourceLocation alias = iconAliasLocation(pack, iconFile);
+                if (!alias.getPath().startsWith(path)) {
+                    continue;
+                }
+
+                String entryName = zipEntryFor(pack, alias);
+                FileLoader.FileEntry entry = entryName == null ? null : pack.getEntryIgnoreCase(entryName);
+                if (entry != null) {
+                    output.accept(alias, () -> pack.fileLoader.getInputStream(entry));
                 }
             }
         }
@@ -361,7 +388,10 @@ public class ModelPackResources extends AbstractPackResources {
                 JsonArray sounds = new JsonArray();
                 for (ExJBSound sound : info.soundFileList) {
                     JsonObject one = new JsonObject();
-                    one.addProperty("name", id + "/" + stripExtension(sound.soundlFileName).toLowerCase(Locale.ROOT));
+                    // A name without a namespace would resolve to minecraft:sounds/... - the pack
+                    // serves its sound files under its own namespace (see zipEntryFor).
+                    one.addProperty("name", NS + ":" + id + "/"
+                            + stripExtension(sound.soundlFileName).toLowerCase(Locale.ROOT));
                     one.addProperty("stream", false);
                     one.addProperty("volume", sound.volume);
                     one.addProperty("pitch", sound.pitch);
@@ -403,7 +433,7 @@ public class ModelPackResources extends AbstractPackResources {
         if (properties != null && properties.has("itemIconFile")) {
             String icon = properties.get("itemIconFile").getAsString();
             if (icon != null && !icon.isEmpty()) {
-                return pack.packResource(stripExtension(icon)).toString();
+                return iconSprite(pack, icon);
             }
         }
 
@@ -412,8 +442,56 @@ public class ModelPackResources extends AbstractPackResources {
 
     private static String packageIcon(ExtraPackage pack) {
         return pack.packageIconFileName != null && !pack.packageIconFileName.isEmpty()
-                ? pack.packResource(stripExtension(pack.packageIconFileName)).toString()
+                ? iconSprite(pack, pack.packageIconFileName)
                 : null;
+    }
+
+    /** Every icon file a pack's item models can reference, in pack order and without duplicates. */
+    private static Set<String> iconFileNames(ExtraPackage pack) {
+        Set<String> icons = new LinkedHashSet<>();
+        for (int i = 0; i < pack.modelNums; ++i) {
+            ExJBModelInfo info = pack.modelsLoaded[pack.modelsIndexCompressed[i]];
+            addIconFileName(icons, info != null ? info.properties : null);
+        }
+
+        for (int i = 0; i < pack.addonItemNums; ++i) {
+            ExJBAddonItemInfo info = pack.addonItemsLoaded[pack.addonItemsIndexCompressed[i]];
+            addIconFileName(icons, info != null ? info.properties : null);
+        }
+
+        for (int i = 0; i < pack.soundItemNums; ++i) {
+            ExJBSoundItemInfo info = pack.soundItemsLoaded[pack.soundItemsIndexCompressed[i]];
+            addIconFileName(icons, info != null ? info.properties : null);
+        }
+
+        if (pack.packageIconFileName != null && !pack.packageIconFileName.isEmpty()) {
+            icons.add(pack.packageIconFileName);
+        }
+
+        return icons;
+    }
+
+    private static void addIconFileName(Set<String> icons, JsonObject properties) {
+        if (properties != null && properties.has("itemIconFile")) {
+            String icon = properties.get("itemIconFile").getAsString();
+            if (icon != null && !icon.isEmpty()) {
+                icons.add(icon);
+            }
+        }
+    }
+
+    /** The blocks atlas sprite name of a pack icon; {@link #iconAliasLocation} is the file behind it. */
+    private static String iconSprite(ExtraPackage pack, String iconFileName) {
+        return new ResourceLocation(NS, "item/" + iconAliasPath(pack, iconFileName)).toString();
+    }
+
+    private static ResourceLocation iconAliasLocation(ExtraPackage pack, String iconFileName) {
+        return new ResourceLocation(NS, ICON_ALIAS_PREFIX + iconAliasPath(pack, iconFileName) + ".png");
+    }
+
+    /** {@code <packageId>/<icon file without its extension>}, both lower cased as resource paths are. */
+    private static String iconAliasPath(ExtraPackage pack, String iconFileName) {
+        return pack.packageId.toLowerCase(Locale.ROOT) + "/" + stripExtension(iconFileName).toLowerCase(Locale.ROOT);
     }
 
     private static String stripExtension(String fileName) {
@@ -427,18 +505,30 @@ public class ModelPackResources extends AbstractPackResources {
         }
 
         String path = location.getPath();
+        if (path.startsWith(ICON_ALIAS_PREFIX)) {
+            path = path.substring(ICON_ALIAS_PREFIX.length());
+        }
+
+        if (path.startsWith("sounds/")) {
+            path = path.substring("sounds/".length());
+        }
+
         int slash = path.indexOf('/');
         return slash <= 0 ? null : this.packById.get(path.substring(0, slash));
     }
 
     /**
-     * Maps a location back to a zip entry: {@code <packageId>/<entry>} for ordinary resources and
+     * Maps a location back to a zip entry: {@code <packageId>/<entry>} for ordinary resources,
      * {@code sounds/<packageId>/<entry>.ogg} for sounds (1.20.1 only reads sound files from
-     * {@code sounds/}).
+     * {@code sounds/}) and {@code textures/item/<packageId>/<entry>.png} for the icon alias.
      */
     private String zipEntryFor(ExtraPackage pack, ResourceLocation location) {
         String id = pack.packageId.toLowerCase(Locale.ROOT);
         String path = location.getPath();
+        if (path.startsWith(ICON_ALIAS_PREFIX)) {
+            path = path.substring(ICON_ALIAS_PREFIX.length());
+        }
+
         if (path.startsWith("sounds/")) {
             String prefix = "sounds/" + id + "/";
             return path.startsWith(prefix) ? path.substring(prefix.length()) : null;

@@ -13,6 +13,7 @@ import jp.mc.ancientred.jointblock.assemble.JointDataSerializer;
 import jp.mc.ancientred.jointblock.assemble.JointListsHolderImpl;
 import jp.mc.ancientred.jointblock.assemble.JointParts;
 import jp.mc.ancientred.jointblock.assemble.ring.RingProgram;
+import jp.mc.ancientred.jointblock.common.JBLegacyNames;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -31,6 +32,7 @@ import net.minecraft.world.level.block.Block;
  * The serialized format itself ({@code ser}/{@code tnm}/{@code idtbl}/{@code sttbl} plus Java-UTF
  * id/name tables) is a persisted blueprint format and is unchanged; lookups that could miss use
  * {@link Registry#getOptional(ResourceLocation)} to keep the 1.12 null-means-invalid behaviour.
+ * Stored names still carry the 1.12.2 namespaces, so they go through {@link JBLegacyNames} first.
  */
 public class AssembleNBTDataUtil {
    private static final String INVALID_DATA = "invalid data";
@@ -131,7 +133,7 @@ public class AssembleNBTDataUtil {
                      return false;
                   }
 
-                  objItem = registeredItemsList.getOptional(new ResourceLocation(namespaced.toLowerCase())).orElse((Item)null);
+                  objItem = JBLegacyNames.itemByName(namespaced);
                   fixedId = (short)(objItem != null ? registeredItemsList.getId(objItem) : -1);
                   if (fixedId == -1) {
                      parts.modelItemId = 0;
@@ -144,7 +146,7 @@ public class AssembleNBTDataUtil {
                      return false;
                   }
 
-                  Block objBlock = registeredBlockList.getOptional(new ResourceLocation(namespaced.toLowerCase())).orElse((Block)null);
+                  Block objBlock = JBLegacyNames.blockByName(namespaced);
                   fixedId = (short)(objBlock != null ? registeredBlockList.getId(objBlock) : -1);
                   if (fixedId == -1) {
                      parts.modelItemId = 0;
@@ -159,7 +161,7 @@ public class AssembleNBTDataUtil {
                      return false;
                   }
 
-                  objItem = registeredItemsList.getOptional(new ResourceLocation(namespaced.toLowerCase())).orElse((Item)null);
+                  objItem = JBLegacyNames.itemByName(namespaced);
                   fixedId = (short)(objItem != null ? registeredItemsList.getId(objItem) : -1);
                   if (fixedId == -1) {
                      parts.motionItemId = 0;
