@@ -10,9 +10,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * 1.12.2 {@code GuiContainerWithTip} (a {@code GuiContainer} that additionally rendered the
- * hovered tooltip every frame).  In 1.20.1 the equivalent is
- * {@link AbstractContainerScreen} with {@code renderTooltip}, which is the default behaviour
- * already, so the class only carries the shared type/menu plumbing.
+ * hovered tooltip every frame).  1.20.1's {@link AbstractContainerScreen} defines
+ * {@code renderTooltip} but never calls it (vanilla screens such as {@code InventoryScreen} call it
+ * from their own {@code render} override), so {@link #render} below keeps calling it exactly as the
+ * 1.12.2 class did; the class otherwise only carries the shared type/menu plumbing.
  */
 @OnlyIn(Dist.CLIENT)
 public abstract class GuiContainerWithTip<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
@@ -42,6 +43,10 @@ public abstract class GuiContainerWithTip<T extends AbstractContainerMenu> exten
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // 1.12.2 GuiContainerWithTip.func_73863_a ended with func_191948_b (renderHoveredToolTip).
+        // 1.20.1 needs the same call: AbstractContainerScreen defines renderTooltip but no vanilla
+        // path invokes it for a subclass (InventoryScreen and friends call it in their own render).
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     /**

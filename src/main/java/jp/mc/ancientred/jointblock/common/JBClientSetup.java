@@ -35,6 +35,7 @@ import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -207,14 +208,31 @@ public final class JBClientSetup {
                         -> OverlayRendeler.render(guiGraphics, partialTick, screenWidth, screenHeight));
     }
 
+    /**
+     * 1.12.2 {@code CommonProxyClient.init} registered every key binding through
+     * {@code ClientRegistry.registerKeyBinding}. 1.20.1 requires {@link RegisterKeyMappingsEvent};
+     * without this handler the twelve JointBlock bindings never reach the Controls screen.
+     * The instance is built here because this event fires before {@link FMLClientSetupEvent}'s
+     * deferred work runs.
+     */
+    @SubscribeEvent
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        if (JBKeyHanlder.instance == null) {
+            JBKeyHanlder.init();
+        }
+
+        JBKeyHanlder.registerKeyMappings(event);
+    }
+
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             JBMenuTypes.registerScreens();
             // 1.12.2 CommonProxyClient.registerRenderHelper: the per-stack ItemMeshDefinitions.
             registerItemPropertyPredicates();
-            // 1.12.2 CommonProxyClient.init: JBKeyHanlder.instance = new JBKeyHanlder();
-            JBKeyHanlder.instance = new JBKeyHanlder();
+            // JBKeyHanlder.instance is built by onRegisterKeyMappings, which fires before this
+            // deferred work runs; re-creating it here would replace the KeyMappings Forge has
+            // already registered and the bindings would stop reporting their state.
             // 1.12.2 CommonProxyClient.init: build the client-side pattern tables and the batch renderer.
             JBMCubeTable.buildMCTable();
             MCubeMeshBuilder.setUpHelper();

@@ -1,5 +1,6 @@
 package jp.mc.ancientred.jointblock.command;
 
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -65,7 +66,17 @@ public final class JBCommands {
    private static void register(CommandDispatcher<CommandSourceStack> dispatcher, String name, LiteralArgumentBuilder<CommandSourceStack> builder, List<String> aliases) {
       LiteralCommandNode<CommandSourceStack> node = dispatcher.register(builder);
       for (String alias : aliases) {
-         dispatcher.register(Commands.literal(alias).redirect(node));
+         // A plain redirect copies only the children, so the alias node itself is not executable:
+         // "/jbid" (the 1.12.2 alias of "/jbimportdata") then demanded an argument, while 1.12.2
+         // accepted the bare command and CommandImportCarving passed an empty String[]. Forward the
+         // target's own command onto the alias node.
+         Command<CommandSourceStack> target = node.getCommand();
+         LiteralArgumentBuilder<CommandSourceStack> aliasBuilder = Commands.literal(alias).redirect(node);
+         if (target != null) {
+            aliasBuilder = aliasBuilder.executes(target::run);
+         }
+
+         dispatcher.register(aliasBuilder);
       }
    }
 
