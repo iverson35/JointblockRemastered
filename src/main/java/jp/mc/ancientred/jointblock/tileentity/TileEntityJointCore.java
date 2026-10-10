@@ -163,7 +163,7 @@ public class TileEntityJointCore extends TileEntityJoint implements JointInvento
       mob.mainUnitId = mob.unitId = (byte)this.unitId;
       mob.assembleFlags = this.assembleFlags;
       mob.largeUnitWeightFixed = this.largeUnitWeightFixed;
-      mob.boardViewFlags = this.boardViewFlags;
+      mob.setBoardViewFlags(this.boardViewFlags);
       mob.iffTagId = this.iffTagId;
       mob.msbTagId = this.msbTagId;
       mob.seatFlags = (byte)seatsFlg;

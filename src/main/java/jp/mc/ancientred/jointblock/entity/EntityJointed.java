@@ -124,6 +124,12 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
    protected static final EntityDataAccessor<Integer> DW_SMSLOT_FLG = SynchedEntityData.defineId(EntityJointed.class, EntityDataSerializers.INT);
    protected static final EntityDataAccessor<Float> DW_EPOOL_NUM = SynchedEntityData.defineId(EntityJointed.class, EntityDataSerializers.FLOAT);
    protected static final EntityDataAccessor<Float> DW_ECACHE_NUM = SynchedEntityData.defineId(EntityJointed.class, EntityDataSerializers.FLOAT);
+   /**
+    * 1.12.2 carried {@code boardViewFlags} only in the spawn packet, so the client camera kept the
+    * value the unit was assembled with and a later change in the core GUI never reached it. It is
+    * a synced data value in the port so the live unit (and the client) follow the core setting.
+    */
+   protected static final EntityDataAccessor<Byte> DW_BOARD_VIEW_FLAGS = SynchedEntityData.defineId(EntityJointed.class, EntityDataSerializers.BYTE);
    private static final double IMMIDIATE_BOARD_RANGE = 5.5;
    private static final byte JOINT_DATA_FORMAT_VER_1_0 = 10;
    private static final float LARGEWEIGHT_YARDSTICK = 5.0F;
@@ -271,6 +277,26 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       this.getEntityData().define(DW_SMSLOT_FLG, 0);
       this.getEntityData().define(DW_EPOOL_NUM, 1.0F);
       this.getEntityData().define(DW_ECACHE_NUM, 0.0F);
+      this.getEntityData().define(DW_BOARD_VIEW_FLAGS, (byte)0);
+   }
+
+   /**
+    * Sets {@code boardViewFlags} and pushes it through {@link SynchedEntityData} so a change made in
+    * the core GUI (see {@code ContainerJointBlockExtra}) reaches the client camera immediately
+    * instead of only the next assembly.
+    */
+   public void setBoardViewFlags(byte flags) {
+      this.boardViewFlags = flags;
+      this.getEntityData().set(DW_BOARD_VIEW_FLAGS, flags);
+   }
+
+   /**
+    * 1.12.2 {@code boardViewFlags}. The server keeps the plain field (it is serialized to NBT and to
+    * the spawn packet); the client reads the synced value, which is the only copy that follows a
+    * later core GUI change.
+    */
+   private byte getBoardViewFlags() {
+      return this.level() != null && this.level().isClientSide ? this.getEntityData().get(DW_BOARD_VIEW_FLAGS) : this.boardViewFlags;
    }
 
    @Override
@@ -2665,15 +2691,15 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
    }
 
    public boolean isForceFirstPersonViewWhenBoard() {
-      return (this.boardViewFlags & FORCE_FPS_VIEW) != 0;
+      return (this.getBoardViewFlags() & FORCE_FPS_VIEW) != 0;
    }
 
    public boolean isChangeThirdPersonViewDirtanceFar() {
-      return (this.boardViewFlags & FORCE_TPSV_FAR) != 0;
+      return (this.getBoardViewFlags() & FORCE_TPSV_FAR) != 0;
    }
 
    public int getThirdPersonViewFarLevel() {
-      return this.boardViewFlags & TPSV_FAR_LEVEL;
+      return this.getBoardViewFlags() & TPSV_FAR_LEVEL;
    }
 
    @Override
@@ -3127,7 +3153,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       } else {
          this.assembleFlags = tag.getInt("assembleFlags");
       }
-      this.boardViewFlags = tag.getByte("boardViewFlags");
+      this.setBoardViewFlags(tag.getByte("boardViewFlags"));
       this.iffTagId = tag.getLong("iffTagId");
       this.msbTagId = tag.getLong("msbTagId");
       boolean noMove = tag.getBoolean("noMove");
@@ -3413,7 +3439,7 @@ public class EntityJointed extends LivingEntity implements IEntityAdditionalSpaw
       this.destructCount = additionalData.readInt();
       this.ownerHash = additionalData.readInt();
       this.assembleFlags = additionalData.readInt();
-      this.boardViewFlags = additionalData.readByte();
+      this.setBoardViewFlags(additionalData.readByte());
       this.iffTagId = additionalData.readLong();
       this.msbTagId = additionalData.readLong();
       this.setInitLayerMode(additionalData.readByte());

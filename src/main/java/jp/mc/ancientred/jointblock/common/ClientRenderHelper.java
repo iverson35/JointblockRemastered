@@ -20,8 +20,16 @@ public class ClientRenderHelper {
    public static boolean setUpThirdPersonFarViewCamera(Minecraft mc, Player player, EntityJointed entityJointed, float partialTick) {
       Entity eCamera = entityJointed.entityCamera;
       if (!(eCamera instanceof EntityJBClientCamera)) {
-         return false;
-      } else {
+         // 1.12 created this camera in onEntityJBJoinedWorld, which only fires when the unit spawns
+         // with the far-view flag already set. Creating it on demand also covers the unit that is
+         // assembled first and gets the flag later (the core GUI toggles it while a unit exists).
+         EntityJBClientCamera created = new EntityJBClientCamera(entityJointed.level());
+         created.parentEntity = entityJointed;
+         entityJointed.entityCamera = created;
+         eCamera = created;
+      }
+
+      {
          EntityJBClientCamera camEntity = (EntityJBClientCamera)eCamera;
          int farLv = entityJointed.getThirdPersonViewFarLevel();
          if (farLv < 0 || farLv >= JBConfig.TPV_FAR_ARY.length) {

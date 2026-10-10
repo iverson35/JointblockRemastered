@@ -4,6 +4,7 @@ import jp.mc.ancientred.jointblock.JBModContainer;
 import jp.mc.ancientred.jointblock.assemble.AssembleFlagsUtil;
 import jp.mc.ancientred.jointblock.block.BlockJointBase;
 import jp.mc.ancientred.jointblock.common.WorldHelper;
+import jp.mc.ancientred.jointblock.entity.EntityJointed;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJoint;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJointAttracter;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJointCore;
@@ -231,6 +232,18 @@ public class ContainerJointBlockExtra extends AbstractContainerMenu implements I
                         return;
                     }
                     break;
+            }
+
+            if (te instanceof TileEntityJointCore) {
+                // 1.12.2 wrote the core tile entity only; the unit copied boardViewFlags at assembly
+                // time, so a change made while a unit was already assembled never took effect. The
+                // core's innerChest holder is the live unit, so push the setting there - the synced
+                // data value then reaches the client camera without a re-assembly.
+                TileEntityJointCore teCore = (TileEntityJointCore)te;
+                EntityJointed assembled = teCore.innerChest.getInventoryHolderEntityJointed();
+                if (assembled != null && !assembled.level().isClientSide) {
+                    assembled.setBoardViewFlags(teCore.boardViewFlags);
+                }
             }
 
             te.markUpdateThis();
