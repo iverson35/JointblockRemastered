@@ -13,6 +13,7 @@ import jp.mc.ancientred.jointblock.config.JBKeyHanlder;
 import jp.mc.ancientred.jointblock.entity.EntityJBClientCamera;
 import jp.mc.ancientred.jointblock.entity.EntityJointed;
 import jp.mc.ancientred.jointblock.entity.EntitySeatPart;
+import jp.mc.ancientred.jointblock.gui.OverlayRingDebugRendeler;
 import jp.mc.ancientred.jointblock.item.ICeramicModBoundItem;
 import jp.mc.ancientred.jointblock.item.ItemJBTargetSight;
 import jp.mc.ancientred.jointblock.tileentity.TileEntityJoint;
@@ -36,6 +37,7 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderHighlightEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ViewportEvent;
@@ -108,7 +110,6 @@ import org.lwjgl.glfw.GLFW;
 public class ClientEventhandler {
    /** 1.12.2 {@code languagePrev}: detected language changes re-init the entry formats. */
    private static String languagePrev = "";
-   private static long lastHighlightLog;
    /** 1.12.2 {@code cancelRenderHand}: set while the seat camera is active, consumed by {@link #onRenderHand}. */
    private static boolean cancelRenderHand = false;
    /** 1.12.2 {@code needCameraRollReset}: raised while a JB camera is active, cleared when it is not. */
@@ -392,12 +393,24 @@ public class ClientEventhandler {
 
       TileEntityJoint te = BlockJointBase.getTileEntityJointerBase(level, pos.getX(), pos.getY(), pos.getZ());
       if (te != null && te.isValidCarveable()) {
-         if (System.currentTimeMillis() - lastHighlightLog > 500L) {
-            lastHighlightLog = System.currentTimeMillis();
-            JointBlockRemastered.LOGGER.info("[JBHILITE] drawing carved box for {}", pos);
-         }
          JBCarvingClientUtil.drawJBCarvedBoundingBox(event, te);
          event.setCanceled(true);
+      }
+   }
+
+   /**
+    * 1.12.2 {@code CommonForgeEventHandler#handleRenderLast} ->
+    * {@code OverlayRingDebugRendeler#renderPathDebug}: the {@code /jbringdebug} navigator path
+    * boxes. 1.20.1 removed {@code RenderWorldLastEvent}; the counterpart is
+    * {@link RenderLevelStageEvent} at {@link RenderLevelStageEvent.Stage#AFTER_ENTITIES} (the
+    * camera-relative world pose the 1.12 world-last pass also used). Without this the boxes were
+    * never drawn - {@code renderPathDebug} had no caller.
+    */
+   @SubscribeEvent
+   public static void onRenderLevelStage(RenderLevelStageEvent event) {
+      if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
+         OverlayRingDebugRendeler.renderPathDebug(event.getPartialTick(), event.getPoseStack(),
+                 Minecraft.getInstance().renderBuffers().bufferSource());
       }
    }
 

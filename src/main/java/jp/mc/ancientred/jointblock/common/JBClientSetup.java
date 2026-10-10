@@ -12,6 +12,7 @@ import jp.mc.ancientred.jointblock.entity.render.RenderEntityJBClientCamera;
 import jp.mc.ancientred.jointblock.entity.render.RenderEntityJointed;
 import jp.mc.ancientred.jointblock.entity.render.RenderEntityTempWorker;
 import jp.mc.ancientred.jointblock.gui.JBMenuTypes;
+import jp.mc.ancientred.jointblock.gui.OverlayRendeler;
 import jp.mc.ancientred.jointblock.item.model.SubIconItemModelLoader;
 import jp.mc.ancientred.jointblock.registry.JBBlockEntityTypes;
 import jp.mc.ancientred.jointblock.registry.JBEntityTypes;
@@ -23,6 +24,8 @@ import net.minecraftforge.client.event.ModelEvent;
 import jp.mc.ancientred.jointblock.item.IColorHanldlerItem;
 import jp.mc.ancientred.jointblock.registry.JBItems;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -89,6 +92,22 @@ public final class JBClientSetup {
                 JBItems.HumanLowerMotionItem, JBItems.BeastLowerMotionItem, JBItems.InsectsMotionItem,
                 JBItems.MachineMotionItem, JBItems.SensorMotionItem, JBItems.RingMotionItem,
                 JBItems.CeramicPuttyItem, JBItems.JBMouseItem);
+    }
+
+    /**
+     * 1.12.2 {@code CommonForgeEventHandler.handleDrawSceen}: {@code RenderGameOverlayEvent.Post} at
+     * {@code ElementType.BOSSHEALTH} called {@code OverlayRendeler.renderOverlay(event)}. 1.20.1 has
+     * no {@code RenderGameOverlayEvent}, so the same body is registered as an {@link IGuiOverlay}
+     * ordered above {@link VanillaGuiOverlay#BOSS_EVENT_PROGRESS} - the vanilla layer the 1.12
+     * {@code BOSSHEALTH} element corresponds to. Without this registration the whole HUD
+     * (unit status bars, target sights, indicator window and the {@code /jbringdebug} ring window)
+     * never renders.
+     */
+    @SubscribeEvent
+    public static void onRegisterGuiOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAbove(VanillaGuiOverlay.BOSS_EVENT_PROGRESS.id(), "renderer",
+                (gui, guiGraphics, partialTick, screenWidth, screenHeight)
+                        -> OverlayRendeler.render(guiGraphics, partialTick, screenWidth, screenHeight));
     }
 
     @SubscribeEvent

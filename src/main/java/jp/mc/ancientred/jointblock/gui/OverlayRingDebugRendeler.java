@@ -64,7 +64,8 @@ import org.joml.Matrix4f;
  *       {@code (0,0,0,0.4)}/{@code glLineWidth(2)}/{@code depthMask(false)} state is carried by the
  *       vertex colours and the line-strip width; {@code NO_TRANSPARENCY} on {@code debugLineStrip}
  *       means the 0.4 alpha is not blended (the closest available POSITION_COLOR line render type) -
- *       recorded as a substitution. The caller must be a {@code RenderLevelStageEvent} handler.</li>
+ *       recorded as a substitution. The caller is the {@code RenderLevelStageEvent} handler
+ *       {@code ClientEventhandler#onRenderLevelStage}.</li>
  * </ul>
  */
 @OnlyIn(Dist.CLIENT)
@@ -286,8 +287,8 @@ public class OverlayRingDebugRendeler {
 
    /**
     * 1.12 {@code renderPathDebug(float)}: the navigator path boxes. 1.20.1 removed
-    * {@code RenderWorldLastEvent}, so the caller (a {@code RenderLevelStageEvent} handler wired by
-    * Main, the counterpart of the 1.12 {@code handleRenderLast}) supplies the world-pass
+    * {@code RenderWorldLastEvent}, so the caller ({@code ClientEventhandler#onRenderLevelStage},
+    * the counterpart of the 1.12 {@code handleRenderLast}) supplies the world-pass
     * {@link PoseStack} and the geometry {@link MultiBufferSource}; positions are camera-relative as
     * in 1.12 and each box is flushed through {@link #drawOutlinedBoundingBox}.
     */

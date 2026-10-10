@@ -37,8 +37,12 @@ import net.minecraftforge.fml.LogicalSide;
  *   <li>{@code handleOnClientCommand} - {@code net.minecraftforge.event.CommandEvent} is
  *       server-only in 1.20.1; all 17 commands are Brigadier-registered from JBCommands
  *       (see PortPacketCmdExport).</li>
- *   <li>{@code handleDrawSceen} / {@code onDrawBlockHighlight} / {@code handleRenderLast} -
- *       render events (OverlayRendeler, JBCarvingClientUtil, OverlayRingDebugRendeler).</li>
+ *   <li>{@code handleDrawSceen} - the 1.12 {@code RenderGameOverlayEvent.Post(BOSSHEALTH)} HUD call;
+ *       the {@code IGuiOverlay} registration that replaces it lives in {@code JBClientSetup}
+ *       ({@code onRegisterGuiOverlays}).</li>
+ *   <li>{@code onDrawBlockHighlight} / {@code handleRenderLast} - the render events
+ *       ({@code JBCarvingClientUtil}, {@code OverlayRingDebugRendeler}) are wired on the client
+ *       handler {@code ClientEventhandler} ({@code onDrawBlockHighlight}, {@code onRenderLevelStage}).</li>
  *   <li>{@code handlePlaySound} - needs SoundHandlerHook.handlePlaySoundHook, omitted with the
  *       paulscode SoundEngine rewrite.</li>
  * </ul>

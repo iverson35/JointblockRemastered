@@ -9,11 +9,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 /**
- * Port of the 1.12.2 {@code CommandRingDebug} ({@code jbringdebug} / {@code jbrd} /
- * {@code jbdr}): toggles the ring-program path debug overlay and its target ring number.
- * 1.12.2 routed the body through the Forge {@code CommandEvent} hook
- * ({@code CommonProxyClient.processCommandRingDebug}); only the overlay renderer itself is
- * Phase 4, the toggled state is fully ported.
+ * <p>Port of the 1.12.2 {@code CommandRingDebug} ({@code jbringdebug} / {@code jbrd} /
+ * {@code jbdr}): toggles the ring-program debug overlay (the HUD ring window and the navigator path
+ * boxes) and its target ring number. 1.12.2 routed the body through the Forge {@code CommandEvent}
+ * hook ({@code CommonProxyClient.processCommandRingDebug}); the toggled state and the renderer are
+ * both wired in 1.20.1 ({@code JBClientSetup#onRegisterGuiOverlays} for the HUD window,
+ * {@code ClientEventhandler#onRenderLevelStage} for the world-space path boxes).
  */
 public final class CommandRingDebug extends AbstractClientCommand {
 
