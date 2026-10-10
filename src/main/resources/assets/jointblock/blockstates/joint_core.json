@@ -1,8 +1,19 @@
 {
     "variants": {
-        "facing=north": { "model": "jointblock:blueprintbuilder" },
-        "facing=east":  { "model": "jointblock:blueprintbuilder", "y": 90 },
-        "facing=south": { "model": "jointblock:blueprintbuilder", "y": 180 },
-        "facing=west":  { "model": "jointblock:blueprintbuilder", "y": 270 }
+        "facing=north": {
+            "model": "jointblock:block/joint_core"
+        },
+        "facing=east": {
+            "model": "jointblock:block/joint_core",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "jointblock:block/joint_core",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "jointblock:block/joint_core",
+            "y": 270
+        }
     }
 }

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FUF",
+    "F F",
+    "FUF"
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    },
+    "F": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "jointblock:jbcopytool",
+    "nbt": "{subtype:2}"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "jointblock:subtype_conversion",
+  "category": "misc",
+  "input": {
+    "item": "jointblock:jbmouse",
+    "subtype": 3
+  },
+  "result": {
+    "item": "jointblock:jbmouse",
+    "subtype": 0
+  }
+}

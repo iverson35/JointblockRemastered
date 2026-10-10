@@ -57,14 +57,48 @@ public final class JBConfig {
     public static boolean enableJointBlockParticle = true;
     public static boolean enableJointBlockSounds = true;
     public static boolean priorReceiveJBPacket = true;
+    /** 1.12.2 debug switch: re-emit every carved voxel each frame instead of replaying the cached mesh. */
     public static boolean disableCarvingGLCompile = false;
     public static int unitStatusBarOffsetX = 0;
     public static int unitStatusBarOffsetY = 0;
     public static boolean enableIndicatorWindowFromStart = true;
     public static boolean indicatorWindowEnabled = true;
     public static int indicatorWindowPosition = 2; // I_INDICATOR_POS_RIGT
-    public static boolean bypathEJRenderByStickyTileEntity = true;
+    /**
+     * 1.12.2 default was {@code true}: jointed units, bullets and worker effects were drawn by the
+     * sticky batcher tile-entity renderer instead of the entity pass.
+     *
+     * <p>That path cannot be reached in 1.20.1: its trigger was
+     * {@code RenderGlobal.renderEntities(Collections.emptyList(), CommonProxyClient.dummyTEList)},
+     * a per-frame forced TESR pass that no longer exists, and {@code TileEntityJBEntityBatcher} is
+     * registered without an owning block, so no batcher instance can ever sit in the world. The
+     * batcher renderer is kept as the faithful 1.12.2 artefact, but the default is now the entity
+     * renderer path ({@code RenderEntityJointed}/{@code RenderEntityBullet}), which is the complete
+     * 1.20.1 port of the same drawing code.
+     */
+    public static boolean bypathEJRenderByStickyTileEntity = false;
     public static boolean cutoffMouseScrollWithCtrl = false;
+
+    // ------------------------------------------------------------------
+    // Runtime-only statics (never persisted; the 1.12.2 config loader did not read
+    // them either — they are set at runtime by the packet sync and the debug commands)
+    // ------------------------------------------------------------------
+    /** Client mirror of {@link #maxInitLayers}, filled by {@code PACKET_TYPE_SETTINGS_SYNC}. */
+    public static int maxInitLayersLocal = 127;
+    /** Toggled by {@code /jbdebugglist}: dumps the GL display-list state overlay. */
+    public static boolean debugGLListState = false;
+    /** {@code /jbshowframe <n>}: 0 = off, >0 renders joint frames. */
+    public static int showJBFrame = 0;
+    /** {@code /jbshowbounds <n>}: 0 = off, >0 renders joint bounds. */
+    public static int showJBBounds = 0;
+    /** {@code /jbshowconnection <n>}: 0 = off, >0 renders joint connections. */
+    public static int showJBConnection = 0;
+    public static boolean doShowJBConnection = false;
+    /** {@code /jbringdebug [off|on|0-4]}: ring-program path debug overlay. */
+    public static boolean enableDebugRing = false;
+    public static int debugRingTargetNum = 0;
+    /** Indicator window "detail" mode, enabled by {@code /jbtoggleindicator don}. */
+    public static boolean enableDebugIndicates = false;
 
     // ------------------------------------------------------------------
     // Constants kept from the original
@@ -166,7 +200,7 @@ public final class JBConfig {
         cUnitStatusBarOffsetY = client.defineInRange("unitStatusBarOffsetY", 0, 0, 32767);
         cEnableIndicatorWindowFromStart = client.define("enableIndicatorWindowFromStart", true);
         cIndicatorWindowPosition = client.defineInRange("indicatorWindowPosition", 2, 0, 2);
-        cBypathEJRenderByStickyTileEntity = client.define("bypathEJRenderByStickyTileEntity", true);
+        cBypathEJRenderByStickyTileEntity = client.define("bypathEJRenderByStickyTileEntity", false);
         cCutoffMouseScrollWithCtrl = client.define("cutoffMouseScrollWithCtrl", false);
         client.pop();
         clientSpec = client.build();

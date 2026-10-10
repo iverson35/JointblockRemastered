@@ -1,0 +1,11 @@
+{
+  "parent": "jbrobot:item/model_robot_hand_l",
+  "overrides": [
+    {
+      "predicate": {
+        "jbrobot:meta": 1
+      },
+      "model": "jbrobot:item/model_robot_hand_r"
+    }
+  ]
+}

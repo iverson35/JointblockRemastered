@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SNS"
+  ],
+  "key": {
+    "S": {
+      "item": "jointblock:joint_slider"
+    },
+    "N": {
+      "item": "jointblock:joint_extender"
+    }
+  },
+  "result": {
+    "item": "jointblock:joint_attracter"
+  }
+}

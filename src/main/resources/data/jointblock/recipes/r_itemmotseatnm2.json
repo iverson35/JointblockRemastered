@@ -1,0 +1,12 @@
+{
+  "type": "jointblock:subtype_conversion",
+  "category": "misc",
+  "input": {
+    "item": "jointblock:itemresmotionitem",
+    "subtype": 1
+  },
+  "result": {
+    "item": "jointblock:itemresmotionitem",
+    "subtype": 2
+  }
+}

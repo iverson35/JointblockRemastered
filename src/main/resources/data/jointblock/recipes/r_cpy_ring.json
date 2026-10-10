@@ -1,0 +1,9 @@
+{
+  "type": "jointblock:copy_data",
+  "category": "misc",
+  "tool": {
+    "item": "jointblock:ringprogram",
+    "subtype": 0
+  },
+  "data": "jb:ringp"
+}

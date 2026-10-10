@@ -20,10 +20,15 @@ build
 # other
 eclipse
 run
+logs
+
+# 1.12.2 reference material: the decompiled mod, its assets and the MCP/source extracts used while
+# porting. Kept on disk, never committed.
+/referance/
+
+# Local throwaway scratch (porting logs, javac/javap scaffolding, jar caches, probes, extracted
+# SRG sources). Everything of that kind lives under debug/ and is never committed.
+/debug/
 
 # Files from Forge MDK
 forge*changelog.txt
-/referance/
-/gradlew.bat
-/gradlew
-/gradle/

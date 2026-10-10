@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "jointblock:joint_normal"
+    }
+  ],
+  "result": {
+    "item": "jointblock:unitparts",
+    "count": 9
+  }
+}

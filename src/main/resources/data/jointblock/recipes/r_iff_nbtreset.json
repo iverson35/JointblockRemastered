@@ -1,0 +1,12 @@
+{
+  "type": "jointblock:subtype_conversion",
+  "category": "misc",
+  "input": {
+    "item": "jointblock:jbifftag",
+    "subtype": 0
+  },
+  "result": {
+    "item": "jointblock:jbifftag",
+    "subtype": 0
+  }
+}

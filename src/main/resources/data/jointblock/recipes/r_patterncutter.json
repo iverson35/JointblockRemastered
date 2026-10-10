@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "F",
+    "C"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:iron_ingot"
+    },
+    "C": {
+      "item": "jointblock:ceramicchisel"
+    }
+  },
+  "result": {
+    "item": "jointblock:patterncutter"
+  }
+}

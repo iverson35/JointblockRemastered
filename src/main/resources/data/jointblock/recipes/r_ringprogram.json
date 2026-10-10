@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " U ",
+    "U U",
+    " U "
+  ],
+  "key": {
+    "U": {
+      "item": "jointblock:unitparts"
+    }
+  },
+  "result": {
+    "item": "jointblock:ringprogram"
+  }
+}

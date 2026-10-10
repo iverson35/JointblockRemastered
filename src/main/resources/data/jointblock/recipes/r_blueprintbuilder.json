@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ROR",
+    "OCO",
+    "ROR"
+  ],
+  "key": {
+    "C": {
+      "item": "jointblock:joint_core"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "item": "jointblock:blueprintbuilder"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "jointblock:subtype_conversion",
+  "category": "misc",
+  "input": {
+    "item": "jointblock:disassembleball",
+    "subtype": 0
+  },
+  "result": {
+    "item": "jointblock:disassembleball",
+    "subtype": 1
+  }
+}
