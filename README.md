@@ -11,6 +11,12 @@ Forge 1.20.1 port of **JointBlock 0.8.4** (Minecraft 1.12.2).
 For an overview of the original mod, see
 <https://www.curseforge.com/minecraft/mc-mods/joint-block-1-7-10>.
 
+### Note
+
+This port was carried out mainly with AI assistance and is still at an early stage. It has not
+been fully tested, and stability cannot be guaranteed. If you run into problems, please open an
+issue.
+
 ### Copyright & Attribution
 
 **JointBlock Remastered** is an *unofficial* source-level port of the Minecraft 1.12.2 mod
@@ -43,6 +49,11 @@ For an overview of the original mod, see
 
 原 Mod 的功能介绍请见 <https://www.mcmod.cn/class/442.html>。
 
+### 注意
+
+本移植主要通过 AI 进行，目前仍处于早期阶段，尚未经过完整测试，无法对稳定性做出保证。
+如有问题，欢迎提交 issue。
+
 ### 版权与归属声明
 
 **JointBlock Remastered** 是对 Minecraft 1.12.2 Mod **「JointBlock」0.8.4**（含其捆绑附属
@@ -68,6 +79,11 @@ For an overview of the original mod, see
 
 原作 MOD の紹介は
 <https://www.curseforge.com/minecraft/mc-mods/joint-block-1-7-10> をご覧ください。
+
+### 注意事項
+
+本移植は主に AI によって進められたもので、まだ初期段階にあり、十分なテストを行っていません。
+安定性は保証できません。問題があれば、issue でのご報告をお願いします。
 
 ### 著作権・帰属表示
 
