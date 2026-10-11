@@ -26,6 +26,7 @@ import jp.mc.ancientred.jointblock.gui.JBGuiSettingsImpl;
 import jp.mc.ancientred.jointblock.item.ItemJBCopyTool;
 import jp.mc.ancientred.jointblock.item.ItemJBMirrorTool;
 import jp.mc.ancientred.jointblock.item.JBItemUtils;
+import jp.mc.ancientred.jointblock.item.motionitem.AbstractMotionItem;
 import jp.mc.ancientred.jointblock.motion.BasicMotionBinder;
 import jp.mc.ancientred.jointblock.registry.JBBlockEntityTypes;
 import net.minecraft.core.BlockPos;
@@ -372,8 +373,26 @@ public class TileEntityJoint extends BlockEntity implements Container, IJBJointP
       }
    }
 
+   /**
+    * The motion item's subtype: 1.12.2 returned {@code ItemStack#getMetadata} for items that declared
+    * {@code getHasSubtypes}, which was exactly the key/item binded motion items (their damage value was
+    * the seat index). The port keeps that subtype in the {@code subtype} NBT tag, so reading the damage
+    * value returned 0 for every chip and every chip ended up bound to seat 0.
+    */
    public int getMotionItemDamage() {
-      return !this.itemStacks.get(1).isEmpty() && this.itemStacks.get(1).getItem().canBeDepleted() ? this.itemStacks.get(1).getDamageValue() : 0;
+      ItemStack motionStack = this.itemStacks.get(1);
+      return !motionStack.isEmpty() && motionStack.getItem() instanceof AbstractMotionItem
+            ? ((AbstractMotionItem)motionStack.getItem()).getSubtype(motionStack) : 0;
+   }
+
+   /** 1.12.2 {@code new ItemStack(item, 1, meta)}: motion items carry the meta in the subtype tag. */
+   private static void setMotionItemMeta(ItemStack motionStack, int meta) {
+      Item item = motionStack.getItem();
+      if (item instanceof AbstractMotionItem) {
+         ((AbstractMotionItem)item).setSubtype(motionStack, meta);
+      } else {
+         motionStack.setDamageValue(meta);
+      }
    }
 
    public void tick() {
@@ -572,7 +591,7 @@ public class TileEntityJoint extends BlockEntity implements Container, IJBJointP
          modelItem = Item.byId(jointParts.motionItemId);
          if (modelItem != null) {
             ItemStack motionStack = new ItemStack(modelItem);
-            motionStack.setDamageValue(jointParts.motionMeta);
+            setMotionItemMeta(motionStack, jointParts.motionMeta);
             this.itemStacks.set(1, motionStack);
             this.prevMotionItemId = BuiltInRegistries.ITEM.getId(modelItem);
          }
@@ -1691,7 +1710,7 @@ public class TileEntityJoint extends BlockEntity implements Container, IJBJointP
 
                         if (item != null) {
                            ItemStack motionStack = new ItemStack(item);
-                           motionStack.setDamageValue(srcMetaId);
+                           setMotionItemMeta(motionStack, srcMetaId);
                            this.itemStacks.set(1, motionStack);
                         } else {
                            this.itemStacks.set(1, ItemStack.EMPTY);
